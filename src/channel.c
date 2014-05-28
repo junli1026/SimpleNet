@@ -20,6 +20,22 @@ static void set_fd_nonblocking(int fd){
     fcntl(fd, F_SETFL, flag | O_NONBLOCK);
 }
 
+static inline int watch_read(int epfd, int fd){
+	struct epoll_event ev;
+	memset(&ev, 0, sizeof(ev));
+	ev.events = EPOLLIN;
+	ev.data.fd = fd;
+	return epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev);
+}
+
+static inline int watch_write(int epfd, int fd){
+	struct epoll_event ev;
+	memset(&ev, 0, sizeof(ev));
+	ev.events = EPOLLOUT;
+	ev.data.fd = fd;
+	return epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev);
+}
+
 struct channel* channel_new(){
 	struct channel* c = malloc(sizeof(struct channel));
 	if(c == NULL){
@@ -44,11 +60,7 @@ struct channel* channel_new(){
     	return NULL;
     }
 
-    struct epoll_event ev;
-    memset(&ev, '\0', sizeof(ev));
-    ev.events = EPOLLIN;
-    ev.data.fd = c->readfd;
-    if(epoll_ctl(c->epollfd, EPOLL_CTL_ADD, c->readfd, &ev)){
+    if(watch_read(c->epollfd, c->readfd)){
     	close(c->readfd);
     	close(c->writefd);
     	free(c);
