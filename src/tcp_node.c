@@ -9,6 +9,9 @@
 #include "address_book.c"
 #include "channel.c"
 
+
+#define MAX_EPOLL_EVENTS 64
+
 struct command{
 	char type;
 	char addr[MAX_ADDRESS];
@@ -37,7 +40,6 @@ struct tcp_node{
 	struct channel* cc;
 	struct address_book *ab;
 	int epollfd;
-	int listenfd;
 	struct socket slots[MAX_SOKCET];
 };
 
@@ -49,7 +51,6 @@ struct tcp_node* tcp_node_new(){
 	n->cc = channel_new();
 	n->ab = address_book_new();
 	n->epollfd = epoll_create(1024);
-	n->listenfd = -1;
  	int i = 0;
 	for(i = 0; i < MAX_SOKCET; i++){
 		n->slots[i].status = SOCKET_VALID;
@@ -61,7 +62,6 @@ void tcp_node_delete(struct tcp_node** node_addr){
 	if(node_addr){
 		struct tcp_node* n = *node_addr;
 		if(n){
-			close(n->listenfd);
 			int i;
 			for(i = 0; i < MAX_SOKCET; i++){
 				if(n->slots[i].fd > 0){
@@ -229,15 +229,29 @@ int handle_cmd(struct tcp_node* node){
 			default:
 				break;
 		}
-		return 0;
 	}
 	return 0;
+}
+
+void tcp_node_loop(struct tcp_node* node){
+	int error = handle_cmd(node);
+	if(error){
+		//error
+	}
+	struct epoll_events events[MAX_EPOLL_EVENTS];
+	int n = epoll_wait(node->epollfd, events, MAX_EPOLL_EVENTS, 100); //timeout = 0.1 sec
+	int i = 0;
+	int fd = -1;
+	for(i = 0; i < n; i++){
+		fd = events[i].data.fd;
+		
+	}
 }
 
 int main(){
 	struct tcp_node * n = tcp_node_new();
 	send_listen(n, "127.0.0.1:1234");
-	send_connect(n, "127.0.0.1:1235");
+	send_connect(n, "127.0.0.1:1234");
 	handle_cmd(n);
 	handle_cmd(n);
 	tcp_node_delete(&n);
