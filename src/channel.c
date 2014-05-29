@@ -25,7 +25,11 @@ static inline int watch_read(int epfd, int fd){
 	memset(&ev, 0, sizeof(ev));
 	ev.events = EPOLLIN;
 	ev.data.fd = fd;
-	return epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev);
+	int error = epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev);
+	if(error){
+		perror("watch_read");
+	}
+	return error;
 }
 
 static inline int watch_write(int epfd, int fd){
@@ -33,7 +37,11 @@ static inline int watch_write(int epfd, int fd){
 	memset(&ev, 0, sizeof(ev));
 	ev.events = EPOLLOUT;
 	ev.data.fd = fd;
-	return epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev);
+	int error = epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev);
+	if(error){
+		perror("watch_write");
+	}
+	return error;
 }
 
 struct channel* channel_new(){

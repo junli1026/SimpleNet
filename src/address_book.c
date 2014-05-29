@@ -39,7 +39,7 @@ void address_book_delete(struct address_book** book_addr){
 	if(book_addr){
 		struct address_book* b = *book_addr;
 		if(b){
-			struct address* a = NULL;b->entries;
+			struct address* a = NULL;
 			struct address* tmp = NULL;
 			int i;
 			for(i = 0; i < MAX_ENTRY; i++){
@@ -69,9 +69,9 @@ void ab_add_address(struct address_book* b, const char* key, size_t sz, int fd){
 		perror("malloc\n");
 		return;
 	}
+	memcpy(addr->key, k, MAX_ADDRESS);
 	addr->next = b->entries[i];
 	addr->fd = fd;
-	memcpy(addr->key, k, MAX_ADDRESS);
 	b->entries[i] = addr;
 }
 
@@ -92,6 +92,15 @@ struct address* ab_find_address(struct address_book* b, const char* key, size_t 
 	return NULL;
 }
 
+int ab_find_fd(struct address_book* b, const char* key, size_t sz){
+	struct address* a = ab_find_address(b, key, sz);
+	if(a != NULL){
+		return a->fd;
+	}else{
+		return -1;
+	}
+}
+
 void ab_delete_address(struct address_book* b, const char* key, size_t sz){
 	if(b == NULL || key == NULL){
 		return;
@@ -100,6 +109,10 @@ void ab_delete_address(struct address_book* b, const char* key, size_t sz){
 	size_t s = (sz > (MAX_ADDRESS -1))? MAX_ADDRESS - 1 : sz;
 	memcpy(k, key, s);
 	struct address* addr = b->entries[hash(k) % MAX_ENTRY];
+	if(addr == NULL){
+		return;
+	}
+
 	if(strcmp(addr->key, k) == 0){
 		b->entries[hash(k) % MAX_ENTRY] = NULL;
 		free(addr);
@@ -127,21 +140,11 @@ char* test(char addr[], int* port){
 
 /*
 int main(){
-	char a[] = "192.168.0.0:1234";
-	int port = 0;
-	char* ip = test(a, &port);
-	printf("ip:%s\tport:%i\n", ip, port);
-		printf("%s\n", a);
-}
-*/
-
-/*
-int main(){
 	struct address_book* b = address_book_new();
-	ab_add_address(b, "helloworld", sizeof("helloworld"), 12);
-	struct address* a = ab_find_address(b, "helloworld", sizeof("helloworld"));
+	ab_add_address(b, "127.0.0.1:1234", sizeof("127.0.0.1:1234"), 12);
+	struct address* a = ab_find_address(b, "127.0.0.1:1234", sizeof("127.0.0.1:1234"));
 	printf("%i\n", a->fd);
-	ab_delete_address(b, "helloworld", strlen("helloworld"));
+	//ab_delete_address(b, "helloworld", strlen("helloworld"));
 	a = ab_find_address(b, "helloworld", sizeof("helloworld"));
 	if(a){
 		printf("error\n");
