@@ -7,14 +7,21 @@
 #include <sys/epoll.h>
 #include <assert.h>
 #include <pthread.h>
+
+#include "buffer.c"
 #include "address_book.c"
 #include "channel.c"
 
 #define MAX_EPOLL_EVENTS 64
+#define MAX_ADDRESS 32
 
 struct command{
 	char type;
-	char addr[MAX_ADDRESS];
+	char addr[MAX_ADDRESS];	
+	struct {
+		void* data;
+		size_t sz;
+	} d;
 };
 
 void command_init(struct command *c, char type, const char* addr, size_t sz){
@@ -22,78 +29,8 @@ void command_init(struct command *c, char type, const char* addr, size_t sz){
 	c->type = type;
 	sz = (sz > MAX_ADDRESS-1)? MAX_ADDRESS-1 : sz;
 	memcpy(c->addr, addr, sz);
-}
-
-struct buffer{
-	size_t length;
-	void* data;
-	struct buffer* next;
-};
-
-struct buffer_list{
-	struct buffer* head;
-	struct buffer* tail;
-};
-
-struct buffer_list* buffer_list_new(){
-	struct buffer_list* bl = malloc(sizeof(*bl));
-	if(bl){
-		bl->head = NULL;
-		bl->tail = NULL;
-	}
-	return bl;
-}
-
-void buffer_list_delete(struct buffer_list** bl_addr){
-	if(bl_addr){
-		struct buffer_list* bl = *bl_addr;
-		if(bl){
-			struct buffer* b = bl->head;
-			struct buffer* tmp = NULL;
-			while(b){
-				tmp = b->next;
-				if(b->data){
-					free(b->data);
-				}
-				free(b);
-				b = tmp;
-			}
-		}
-		free(bl);
-		*bl_addr = NULL;
-	}
-}
-
-void bl_append(struct buffer_list* bl, void* data, size_t l){
-	assert(bl);
-	struct buffer* b = malloc(sizeof(*b));
-	if(b){
-		b->length = l;
-		b->next = NULL;
-		b->data = data;
-		if(bl->head == NULL){
-			bl->head = b;
-			bl->tail = b;
-		}else{
-			bl->tail->next = b;
-			bl->tail = b;
-		}
-	}
-}
-
-void* bl_remove_head(struct buffer_list* bl, size_t* l){
-	assert(bl);
-	if(bl->head == NULL){
-		*l = 0;
-		return NULL;
-	}else{
-		struct buffer* h = bl->head;
-		bl->head = bl->head->next;
-		*l = h->length;
-		void* ret = h->data;
-		free(h);
-		return ret;
-	}
+	c->d.data = NULL;
+	c->d.sz = 0;
 }
 
 #define SOCKET_VALID 1
@@ -104,7 +41,7 @@ void* bl_remove_head(struct buffer_list* bl, size_t* l){
 struct socket{
 	int status;
 	int fd;
-	struct buffer_list* bl;
+	struct buffer* buf;
 };
 
 #define BACKLOG 1024
@@ -112,6 +49,8 @@ struct socket{
 
 struct tcp_node{
 	struct channel* cc;
+	struct buffer* cmdbuf;
+
 	struct address_book *ab;
 	int epollfd;
 	struct socket slots[MAX_SOKCET];
@@ -123,13 +62,14 @@ struct tcp_node* tcp_node_new(){
 		return NULL;
 	}
 	n->cc = channel_new();
+	n->cmdbuf = buffer_new(512);
 	n->ab = address_book_new();
 	n->epollfd = epoll_create(1024);
  	int i = 0;
 	for(i = 0; i < MAX_SOKCET; i++){
 		n->slots[i].status = SOCKET_VALID;
 		n->slots[i].fd = -1;
-		n->slots[i].bl = buffer_list_new();
+		n->slots[i].buf = buffer_new(128);
 	}
 	return n;
 }
@@ -138,12 +78,15 @@ void tcp_node_delete(struct tcp_node** node_addr){
 	if(node_addr){
 		struct tcp_node* n = *node_addr;
 		if(n){
+			buffer_delete(&n->cmdbuf);
 			int i;
 			for(i = 0; i < MAX_SOKCET; i++){
 				if(n->slots[i].fd > 0){
 					close(n->slots[i].fd);
 				}
-				buffer_list_delete(&n->slots[i].bl);
+				if(n->slots[i].buf){
+					buffer_delete(&n->slots[i].buf);
+				}
 			}
 			address_book_delete(&n->ab);
 			channel_delete(&n->cc);
@@ -168,6 +111,12 @@ static int send_data(struct tcp_node* node, void* data, size_t len){
 static int send_cmd(struct tcp_node* node, char type, const char* addr, size_t sz, void* data, size_t datalen){
 	struct command c;
 	command_init(&c, type, addr, sz);
+	if(type == 'D'){
+		c.d.data = malloc(datalen);
+		memcpy(c.d.data, data, datalen);
+		c.d.sz = datalen;
+	}
+
 	int n = write(node->cc->writefd, &c, sizeof(c));
 	if(n < 0){
 		perror("write");
@@ -175,12 +124,6 @@ static int send_cmd(struct tcp_node* node, char type, const char* addr, size_t s
 	}
 	if(n != sizeof(c)){
 		return -1;
-	}
-
-	if(type == 'D'){
-		if(send_data(node, data, datalen)){
-			return -1;
-		}
 	}
 	return 0;
 }
@@ -272,77 +215,161 @@ static int do_connect(const char *host, int port){
     return connect_fd;
 }
 
-int handle_cmd(struct tcp_node* node){
+
+static int read_data(int fd, struct buffer* buf){
+	int sz = 512;
+	int tmp[sz];
+	int n = read(fd, tmp, sz);
+	if(n < 0){
+		perror("read");
+		return -1;
+	}
+	return buffer_append(buf, tmp, n);
+}
+
+static char command_type(struct tcp_node* node){
+	size_t sz;
+	void* data = buffer_data(node->cmdbuf, &sz);
+	if(sz >= sizeof(struct command)){
+		struct command* cmd = (struct command*)data;
+		return cmd->type;
+	}
+	return '\0';
+}
+
+static int handle_listen_cmd(struct tcp_node* node){
+	size_t sz;
+	struct command* cmd = buffer_data(node->cmdbuf, &sz);
+	int port;
+	char* ip = get_ip(cmd->addr, &port);
+
+	int listenfd = do_listen((const char*)ip, port);
+	if(listenfd <= 0){
+		return -1;
+	}
+	struct socket* s = &node->slots[listenfd % MAX_SOKCET];
+	if(s->status == SOCKET_VALID){
+		s->fd = listenfd;
+		s->status = SOCKET_LISTENED;
+		set_fd_nonblocking(s->fd);
+		if(watch_read(node->epollfd, s->fd)){
+			goto _fail;
+		}
+		buffer_truncate(node->cmdbuf, sizeof(struct command));
+		return 0;
+	}
+
+_fail:
+	close(listenfd);
+	buffer_truncate(node->cmdbuf, sizeof(struct command));
+	return -1;
+}
+
+static int handle_connect_cmd(struct tcp_node* node){
+	size_t sz;
+	struct command* cmd = buffer_data(node->cmdbuf, &sz);
+	int port;
+	char* ip = get_ip(cmd->addr, &port);
+	int connectfd = do_connect((const char*)ip, port);
+	if(connectfd <= 0){
+		return -1;
+	}
+	char tmp_addr[MAX_ADDRESS] = {'\0'};
+	sprintf(tmp_addr, "%s:%i", ip, port);
+	printf("ab_add_address: %s\n", tmp_addr);
+	ab_add_address(node->ab, tmp_addr, MAX_ADDRESS-1, connectfd);
+	struct socket* s = &node->slots[connectfd % MAX_SOKCET];
+	if(s->status == SOCKET_VALID){
+		s->fd = connectfd;
+		s->status = SOCKET_WRITE;
+		set_fd_nonblocking(s->fd);
+		if(watch_write(node->epollfd, s->fd)){
+			goto _fail;
+		}
+		buffer_truncate(node->cmdbuf, sizeof(struct command));
+		return 0;
+	}
+
+_fail:
+	close(connectfd);
+	buffer_truncate(node->cmdbuf, sizeof(struct command));
+	return -1;
+}
+
+static int handle_data_cmd(struct tcp_node* node){
+	size_t sz;
+	struct command* cmd = buffer_data(node->cmdbuf, &sz);
+	int fd = ab_find_fd(node->ab, cmd->addr, MAX_ADDRESS -1);
+	if(fd < 0){
+		return -1;
+	}
+	printf("ab_find_fd: %s, get %i\n", cmd->addr, fd);
+
+	void* data = cmd->d.data;
+	size_t datalen = cmd->d.sz;
+	buffer_truncate(node->cmdbuf, sizeof(struct command));
+	struct socket* s = &node->slots[fd % MAX_SOKCET];
+
+	buffer_append(s->buf, &datalen, sizeof(size_t));
+	buffer_append(s->buf, data, datalen);
+	printf("append %i bytes\n", datalen);	
+	int i;
+	for(i = 0; i < datalen; i++){
+		printf("%c", *((char*)data + i));
+	}
+	printf("\n");
+	free(data);
+	/*
+	if(s->status == SOCKET_WRITE){
+		buffer_append(s->buf, &datalen, sizeof(size_t));
+		buffer_append(s->buf, data, datalen);
+		printf("append %i bytes\n", datalen);	
+		int i;
+		for(i = 0; i < datalen; i++){
+			printf("%c", *((char*)data + i));
+		}
+		printf("\n");
+		free(data);
+	}else{
+		printf("status not valid\n");
+		free(data);
+	}
+	*/
+	return 0;
+	//debug
+	/*
+	int i = 0;
+	printf("received %i bytes data: \n", datalen);
+	for(i = 0; i < datalen; i++){
+		printf("%c", *((char*)data + i));
+	}
+	printf("\n");
+	*/
+}
+
+static int handle_cmd(struct tcp_node* node){
 	struct channel* cc = node->cc;
 	if(channel_has_data(cc)){
-		struct command cmd;
-		int n = read(cc->readfd, &cmd, sizeof(cmd));
-		if(n < 0){
-			perror("read");
+		if(read_data(cc->readfd, node->cmdbuf)){
 			return -1;
 		}
 
-		int port;
-		char* ip = NULL;
-		struct socket* s = NULL;
-		if(cmd.type == 'L'){
-			ip = get_ip(cmd.addr, &port);
-			int listenfd = do_listen((const char*)ip, port);
-			if(listenfd <= 0){
-				return -1;
-			}
-			s = &node->slots[listenfd % MAX_SOKCET];
-			if(s->status == SOCKET_VALID){
-				s->fd = listenfd;
-				s->status = SOCKET_LISTENED;
-				set_fd_nonblocking(s->fd);
-				if(watch_read(node->epollfd, s->fd)){
-					close(listenfd);
-				}
-			}else{
-				close(listenfd);
-			}
-		}else if(cmd.type == 'C'){
-			ip = get_ip(cmd.addr, &port);
-			int connectfd = do_connect((const char*)ip, port);
-			if(connectfd <= 0){
-				return -1;
-			}
-			char tmp_addr[MAX_ADDRESS] = {'\0'};
-			sprintf(tmp_addr, "%s:%i", ip, port);
-			printf("ab_add_address: %s\n", tmp_addr);
-			ab_add_address(node->ab, tmp_addr, MAX_ADDRESS - 1, connectfd);
-			s = &node->slots[connectfd % MAX_SOKCET];
-			if(s->status == SOCKET_VALID){
-				s->fd = connectfd;
-				s->status = SOCKET_WRITE;
-				set_fd_nonblocking(s->fd);
-				if(watch_write(node->epollfd, s->fd)){
-					close(connectfd);
-				}
-			}else{
-				close(connectfd);
-			}
-		}else if(cmd.type == 'D'){
-			size_t len;
-			read(cc->readfd, &len, sizeof(len));
-			void* d = malloc(len);
-			read(cc->readfd, d, len);
-			int fd = ab_find_fd(node->ab, cmd.addr, MAX_ADDRESS -1);
-			printf("ab_find_fd: %s, get %i\n", cmd.addr, fd);
-
-			struct buffer_list* bl = node->slots[fd % MAX_SOKCET].bl;
-			bl_append(bl, d, len);
-
-			int i = 0;
-			printf("received %i bytes data: \n", len);
-			for(i = 0; i < len; i++){
-				printf("%c", *((char*)d + i));
-			}
-			printf("\n");
-		}else{
-
+		char type = command_type(node);
+		int ret;
+		switch(type){
+			case 'L':
+				ret = handle_listen_cmd(node);
+				break;
+			case 'C':
+				ret = handle_connect_cmd(node);
+				break;
+			case 'D':
+				ret = handle_data_cmd(node);
+				break;
+			default:
+				break;
 		}
+		return ret;
 	}
 	return 0;
 }
@@ -390,9 +417,33 @@ void tcp_node_loop(struct tcp_node* node){
 			if(s->status == SOCKET_LISTENED){
 				do_accpet(node, fd);
 			}else if(s->status == SOCKET_READ && (events[i].events & EPOLLIN)){ //received data from clients
-				printf("fd %i has data\n", fd);
+				char buf[512];
+				int n = read(s->fd, buf, 512);
+				if(n > 0){
+					buffer_append(s->buf, buf, n);
+					for(i = 0; i < n; i++){
+						printf("%c", buf[i]);
+					}
+					printf("\n");
+				}else{
+					printf("read return %i\n", n);
+				}
 			}else if(s->status == SOCKET_WRITE && (events[i].events & EPOLLOUT)){ //ready to send data
-				printf("fd %i ready to write\n", fd);
+				size_t sz;
+				void* data = buffer_data(s->buf, &sz);
+				if(data){
+					sz = sz > 512 ? 512 : sz;
+					printf("sz : %u\n", sz);
+					int n = write(s->fd, data, sz);
+					if(n > 0){
+						printf("write %i bytes.\n", n);
+						buffer_truncate(s->buf, n);
+					}else{
+						printf("write return %i\n", n);
+					}
+				}else{
+					//printf("write buffer empty\n");
+				}
 			}else{
 				printf("close fd %i\n", events[i].data.fd);
 				epoll_ctl(node->epollfd, EPOLL_CTL_DEL, fd, NULL);
@@ -400,30 +451,4 @@ void tcp_node_loop(struct tcp_node* node){
 			}
 		}
 	}
-}
-
-
-void* server(void* data){
-	struct tcp_node* n = (struct tcp_node*) data;
-	tcp_node_loop(n);
-}
-
-int main(){
-	pthread_t th;
-
-	struct tcp_node * n = tcp_node_new();
-	
-	pthread_create(&th, NULL, server, (void*)n);
-
-	sleep(1);
-	tcp_node_listen(n, "127.0.0.1:1234");
-	tcp_node_loop(n);
-
-	tcp_node_connect(n, "127.0.0.1:1234");
-	tcp_node_loop(n);
-
-	tcp_node_data(n, "127.0.0.1:1234", "helloworld", strlen("helloworld"));
-	tcp_node_loop(n);
-	
-	tcp_node_delete(&n);
 }

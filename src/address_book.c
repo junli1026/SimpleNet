@@ -50,10 +50,10 @@ void address_book_delete(struct address_book** book_addr){
 					a = tmp;
 				}	
 			}
+			free(b);
 		}
-		free(b);
+		*book_addr = NULL;
 	}
-	*book_addr = NULL;
 }
 
 void ab_add_address(struct address_book* b, const char* key, size_t sz, int fd){
