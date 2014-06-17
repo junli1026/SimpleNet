@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <errno.h>
+#include <iostream>
 
 namespace simple{
 class IOHandler{
@@ -24,12 +25,27 @@ public:
 		uint8_t b[1024];
 		int n = read(fd, b, 1024);
 		if(n < 0){
+			std::cout << "n < 0" << std::endl;
+			fflush(stdout);
+
 			this->ctx_.errnumber = errno;
 		}else if(n == 0){
+			std::cout << "n = 0" << std::endl;
+			fflush(stdout);
+
 			s->setClose();
 			this->ctx_.errnumber = 0;
 		}else{
 			this->ctx_.errnumber = 0;
+
+			std::cout << "received: ";
+			for(int i = 0; i < n; i++){
+				std::cout << b[i];
+			}
+			std::cout << std::endl;
+			fflush(stdout);
+
+
 			buf->append(b, n);
 		}
 		this->ctx_.operation = SockOpRead;
@@ -49,6 +65,7 @@ public:
 			this->ctx_.errnumber = errno;
 		}else{
 			this->ctx_.errnumber = 0;
+			buf->truncate(n);
 		}
 		this->ctx_.operation = SockOpWrite;
 		this->ctx_.connfd = -1;

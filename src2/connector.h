@@ -3,6 +3,8 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <string.h>
+#include <unistd.h>
 
 class Connector{
 private:

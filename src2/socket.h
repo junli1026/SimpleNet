@@ -26,7 +26,7 @@ public:
 		return this->fd_;
 	}
 
-	void setNonblocking(){
+	void setNonBlock(){
     	int flag = fcntl(this->fd_, F_GETFL, 0);
     	if (-1 == flag){
         	return;

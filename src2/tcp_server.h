@@ -8,7 +8,7 @@ namespace simple{
 
 class TcpServer
 {
-private:
+protected:
 	Poller poller_;
 	Acceptor acceptor_;
 	std::map<int, std::shared_ptr<ASocket>> acceptSockets_;
@@ -30,8 +30,8 @@ public:
 	void monitor(const char* ip, int port);
 
 	virtual void acceptContinuous(const Context& ctx) = 0;
-	virtual void readContinuous(const Context& ctx) = 0;
-	virtual void writeContinuous(const Context& ctx) = 0;
+	virtual void readContinuous(const Context& ctx, IOSocket* s) = 0;
+	virtual void writeContinuous(const Context& ctx, IOSocket* s) = 0;
 	void run();
 };
 

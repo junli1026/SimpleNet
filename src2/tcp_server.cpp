@@ -60,9 +60,10 @@ void TcpServer::doAccept(ASocket* s){
 	const Context& ctx = this->acceptor_.doAccept(s);
 	if(ctx.errnumber){
 		perror("accept");
+
 		return;
 	}
-	this->acceptContinuous(ctx);
+	acceptContinuous(ctx);
 }
 
 void TcpServer::doRead(IOSocket* s){
@@ -71,7 +72,7 @@ void TcpServer::doRead(IOSocket* s){
 		perror("read");
 		return;
 	}
-	this->readContinuous(ctx);
+	this->readContinuous(ctx, s);
 }
 
 void TcpServer::doWrite(IOSocket* s){
@@ -80,7 +81,7 @@ void TcpServer::doWrite(IOSocket* s){
 		perror("write");
 		return;
 	}
-	this->writeContinuous(ctx);
+	this->writeContinuous(ctx, s);
 }
 
 void TcpServer::monitor(const char* ip, int port){
@@ -89,7 +90,10 @@ void TcpServer::monitor(const char* ip, int port){
 		printf("error\n");
 		return;
 	}else{
-		this->poller_.addRead(listenfd);
+		std::shared_ptr<ASocket> s = std::make_shared<ASocket>(listenfd);
+		s->setNonBlock();
+		this->acceptSockets_.insert(std::pair<int, std::shared_ptr<ASocket>>(listenfd, s));
+		this->poller_.addRead(s->getFd());
 	}
 }
 
@@ -98,9 +102,10 @@ void TcpServer::run(){
 	struct epoll_event* ev = NULL;
 	Socket *s = NULL;
 	int fd;
-	while(this->poller_.hasEvent()){
+	while(this->poller_.hasEvent()){ 
 		ev = this->poller_.nextEvent();
 		fd = ev->data.fd;
+		fflush(stdout);
 		if(isAcceptSocket(fd)){
 			this->doAccept(acceptSockets_.find(fd)->second.get());
 		}else if(ev->events & EPOLLIN){

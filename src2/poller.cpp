@@ -9,6 +9,7 @@ namespace simple{
 Poller::Poller(){
 	this->ev_index_ = 0;
 	this->ev_count_ = 0;
+	this->epfd_ = epoll_create(1024);
 }
 
 Poller::~Poller(){
