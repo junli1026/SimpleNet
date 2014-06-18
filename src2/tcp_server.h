@@ -2,6 +2,7 @@
 #include "socket.h"
 #include "acceptor.h"
 #include "io_handler.h"
+#include "channel.h"
 #include <map>
 
 namespace simple{
