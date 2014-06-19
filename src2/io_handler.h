@@ -54,19 +54,33 @@ public:
 	}
 
 	const Context& doWrite(IOSocket* s){
+		
 		int fd = s->getFd();
 		auto buf = s->getWriteBuffer();
+		if(buf->size() == 0){
+			this->ctx_.errnumber = 0;
+			return this->ctx_;
+		}
+
 		size_t sz = 1024;
 		if(buf->size() < sz){
 			sz = buf->size();
 		}
+		
 		int n = write(fd, buf->begin(), sz);
+		std::cout << " after write" << std::endl;
 		if(n < 0){
 			this->ctx_.errnumber = errno;
+		}else if(n == 0){
+
 		}else{
 			this->ctx_.errnumber = 0;
 			buf->truncate(n);
 		}
+
+		std::cout << "write " << n << " bytes" << std::endl;
+		fflush(stdout);
+
 		this->ctx_.operation = SockOpWrite;
 		this->ctx_.connfd = -1;
 		return this->ctx_;

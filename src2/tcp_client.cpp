@@ -1,6 +1,7 @@
 #include "tcp_client.h"
 
 #include <iostream>
+#include <string.h>
 
 namespace simple{
 
@@ -29,10 +30,13 @@ std::vector<uint8_t> TcpClient::receiveData(){
 	uint8_t buf[1024];
 	int n;
 	while((n = read(this->fd_, buf, 1024)) > 0){
+
+		std::cout << "here" << std::endl;
 		for(int i = 0; i < n; i++){
 			std::cout << static_cast<char>(buf[i]);
 		}
 		std::cout << std::endl;
+
 		ret.reserve(ret.size() + n);
 		std::copy(buf, buf+n, ret.end());
 	}

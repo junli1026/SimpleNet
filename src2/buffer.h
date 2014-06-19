@@ -23,6 +23,7 @@ public:
 	size_t size();
 	void clear();
 	void append(const void* src, size_t len);
+	void append(std::vector<uint8_t> v);
 	uint8_t* begin();
 	void truncate(size_t sz);
 	std::vector<uint8_t> retrieveBy(const void* separator, size_t sz);

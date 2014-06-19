@@ -4,6 +4,7 @@
 //#include "writer.h"
 #include <iostream>
 #include <memory>
+#include <algorithm>
 #include <string.h>
 #include <vector>
 
@@ -29,10 +30,20 @@ int main(){
 	for(int i = 0; i < 3; i++){
 		std::cout << start[i] << std::endl;
 	}
-*/
+
 	std::shared_ptr<int> p; //= std::make_shared<int>(12);
 	if(!p){
 		std::cout << "is null";
 	}
+	*/
+
+	std::vector<char> v;
+	std::cout << v.size();
+	std::cout << v.capacity();
+	v.reserve(12);
+	int a[12];
+	//std::copy(a, a+12, v.begin());
+
+	std::cout << v.capacity();
 
 }

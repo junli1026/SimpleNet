@@ -60,7 +60,6 @@ void TcpServer::doAccept(ASocket* s){
 	const Context& ctx = this->acceptor_.doAccept(s);
 	if(ctx.errnumber){
 		perror("accept");
-
 		return;
 	}
 	acceptContinuous(ctx);
@@ -105,7 +104,6 @@ void TcpServer::run(){
 	while(this->poller_.hasEvent()){ 
 		ev = this->poller_.nextEvent();
 		fd = ev->data.fd;
-		fflush(stdout);
 		if(isAcceptSocket(fd)){
 			this->doAccept(acceptSockets_.find(fd)->second.get());
 		}else if(ev->events & EPOLLIN){

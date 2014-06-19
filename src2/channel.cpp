@@ -138,6 +138,7 @@ void Channel::writeControlWords(const ControlWords& ws){
 
 }//namespace simple
 
+/*
 using namespace simple;
 int main(){
 	Channel c;
@@ -158,4 +159,5 @@ int main(){
 	}
 
 }
+*/
 

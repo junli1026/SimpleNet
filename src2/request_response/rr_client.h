@@ -10,7 +10,7 @@ class RRClient: public TcpClient{
 private:
 
 public:
-	std::vector<uint8_t> ;
+
 };
 
 }
