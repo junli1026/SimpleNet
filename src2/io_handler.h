@@ -87,4 +87,22 @@ public:
 	}
 
 };
+
+class IOHandler{
+private:
+	std::shared_ptr<Poller> poller_;
+	std::map<int, std::shared_ptr<IOSocket>> sockets_;
+	
+	IOHandler& operator=(const IOHandler& IOHandler){}
+	IOHandler(const IOHandler& IOHandler){}
+public:
+	bool contains(int fd);
+	void add(int fd);
+	void erase(int fd);
+	void doRead(int fd);
+	void doWrite(int fd);
+	
+	IOHandler(std::shared_ptr<Poller> poller);
+	~IOHandler();
+};
 }
