@@ -25,6 +25,7 @@ public:
 
 	const uint8_t* begin() const;
 	size_t size() const;
+	bool empty() const;
 };
 }
 #endif
