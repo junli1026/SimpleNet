@@ -70,6 +70,10 @@ size_t Message::size() const{
 	return this->v_.size();
 }
 
+bool Message::empty() const{
+	return (this->size() == 0);	
+}
+
 }
 
 /*
