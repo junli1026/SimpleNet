@@ -10,14 +10,14 @@ class Message{
 private:
 	std::vector<uint8_t> v_;
 
-	Message();
 	void copyFrom(const Message& m);
 	void initFrom(const void* src, size_t t);
 public:
 	Message(const void* src, size_t sz);
 	Message(const std::string str);
-	Message(const char* str);
 	Message(const Message& m);
+	Message(const char* str);
+	Message();
 	
 	Message& operator=(const Message& m);
 	bool operator==(const Message& rhs) const;
