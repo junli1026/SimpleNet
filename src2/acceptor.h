@@ -35,16 +35,14 @@ public:
 	~Acceptor(){}
 };
 
-/*
 class Acceptor{
 public:
 	Acceptor(const Poller& poller);
-	bool isAcceptSocket(ASocket* s);
+	bool contains(int fd);
 	void doAccept(ASocket* s);
 
 }
 
 
-*/
 
 }
