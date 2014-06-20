@@ -32,6 +32,7 @@ void Buffer::removeEmptyHead(){
 	if(this->rIndex_ == this->wIndex_){
 		this->rIndex_ = 0;
 		this->wIndex_ = 0;
+		return;
 	}
 	std::vector<uint8_t> tmp(this->b_.begin() + this->rIndex_, this->b_.begin() + this->wIndex_);
 	std::copy(tmp.begin(), tmp.end(), this->b_.begin());
