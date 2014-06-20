@@ -36,11 +36,16 @@ public:
 };
 
 class Acceptor{
+private:
+	std::map<int, std::shared_ptr<ASocket>> sockets_;
+	
+	Acceptor& operator=(const Acceptor& acceptor){}
+	Acceptor（const Acceptor& acceptor){}
 public:
 	Acceptor(const Poller& poller);
 	bool contains(int fd);
-	void doAccept(ASocket* s);
-
+	void erase(int fd);
+	int doAccept(int fd); //return new built connection fd
 }
 
 
