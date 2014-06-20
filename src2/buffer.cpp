@@ -6,18 +6,26 @@
 
 namespace simple{
 
-Buffer::Buffer()
-{
+Buffer::Buffer(){
 	this->rIndex_ = 0;
 	this->wIndex_ = 0;
-	this->b_.reserve(512);
+	this->b_.resize(DefaultBufferSize);
 }
 
-Buffer::~Buffer()
-{
+Buffer::~Buffer(){
 }
 
-void Buffer::moveHead(){
+void Buffer::expand(size_t try_append_size){
+	while(this->b_.size() < this->wIndex_ + try_append_size){
+		if(this->b_.size() == 0){
+			this->b_.resize(DefaultBufferSize);
+		}else{
+			this->b_.resize(this->b_.size() * 2);
+		}
+	}
+}
+
+void Buffer::removeEmptyHead(){
 	if(this->rIndex_ == 0){
 		return;
 	}
@@ -32,20 +40,22 @@ void Buffer::moveHead(){
 }
 
 void Buffer::append(const void* src, size_t len){
-	while(this->b_.capacity() < this->wIndex_ + len){
-		this->b_.reserve(this->b_.capacity() * 2);
-	}
+	expand(len);
 	const uint8_t* s = static_cast<const uint8_t*>(src);
 	std::copy(s, s+len, this->b_.begin() + this->wIndex_);
 	this->wIndex_ += len;
 }
 
 void Buffer::append(std::vector<uint8_t> v){
-	while(this->b_.capacity() < this->wIndex_ + v.size()){
-		this->b_.reserve(this->b_.capacity() * 2);
-	}
+	expand(v.size());
 	std::copy(v.begin(), v.end(), this->b_.begin() + this->wIndex_);
 	this->wIndex_ += v.size();
+}
+
+void Buffer::append(const Message& m){
+	expand(m.size());
+	std::copy(m.begin(), m.begin() + m.size(), this->b_.begin() + this->wIndex_);
+	this->wIndex_ += m.size();
 }
 
 void Buffer::clear(){
@@ -54,7 +64,7 @@ void Buffer::clear(){
 	this->wIndex_ = 0;
 }
 
-uint8_t* Buffer::begin(){
+const uint8_t* Buffer::begin() const{
 	if(this->size() > 0){
 		return &this->b_[this->rIndex_];
 	}else{
@@ -70,7 +80,7 @@ void Buffer::truncate(size_t sz){
 	}
 }
 
-size_t Buffer::size(){
+size_t Buffer::size() const{
 	return this->wIndex_ - this->rIndex_;
 }
 
@@ -80,22 +90,22 @@ std::vector<uint8_t> Buffer::retrieveBy(const void* separator, size_t sz){
 	std::vector<uint8_t> ret;
 	if(first == last){
 		return ret;
-	}else{
-		const uint8_t* s = static_cast<const uint8_t*>(separator);
-		if(s == NULL){
-			return ret;
-		}
-		auto it = std::search(first, last, s, s+sz); 
-		if(it == last){
-			return ret;
-		}
-		ret.resize(it + sz - first);
-		std::copy(first, it + sz, ret.begin());
-		this->rIndex_ += it - first + sz;
 	}
 
-	if(this->rIndex_  > 1024){
-		moveHead();
+	const uint8_t* s = static_cast<const uint8_t*>(separator);
+	if(s == NULL){ //that is, seperator is null
+		return ret;
+	}
+	auto it = std::search(first, last, s, s+sz); 
+	if(it == last){
+		return ret;
+	}
+	ret.resize(it + sz - first);
+	std::copy(first, it + sz, ret.begin());
+	this->rIndex_ += it - first + sz;
+	
+	if(this->rIndex_  > MaxEmptyHead){
+		removeEmptyHead();
 	}
 	return ret;
 } 

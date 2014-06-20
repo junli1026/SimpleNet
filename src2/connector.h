@@ -8,7 +8,7 @@
 
 class Connector{
 private:
-	const Connector& operator=(const Connector& Connector){}
+	Connector& operator=(const Connector& Connector){}
 	Connector(const Connector& Connector){}
 public:
 	int doConnect(const char* host, int port){

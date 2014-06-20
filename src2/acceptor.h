@@ -35,4 +35,16 @@ public:
 	~Acceptor(){}
 };
 
+/*
+class Acceptor{
+public:
+	Acceptor(const Poller& poller);
+	bool isAcceptSocket(ASocket* s);
+	void doAccept(ASocket* s);
+
+}
+
+
+*/
+
 }

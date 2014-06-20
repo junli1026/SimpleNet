@@ -38,12 +38,20 @@ int main(){
 	*/
 
 	std::vector<char> v;
-	std::cout << v.size();
-	std::cout << v.capacity();
 	v.reserve(12);
-	int a[12];
-	//std::copy(a, a+12, v.begin());
+	v.resize(6);
+	v.resize(8);
+	std::cout << v.size();
 
-	std::cout << v.capacity();
+	
+	char a[4] = {'a', 'b', 'c', 'd'};
+	std::cout << std::endl;
+	std::copy(a, a+4, v.begin());
+	for(auto ch: v){
+		std::cout << ch;
+	}
+	
+
+	std::cout << std::endl;
 
 }

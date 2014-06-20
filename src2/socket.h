@@ -6,6 +6,7 @@
 #include "buffer.h"
 
 namespace simple{
+	
 class Socket{
 private:
 	int fd_;
