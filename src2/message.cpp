@@ -7,18 +7,16 @@
 
 namespace simple{
 
-Message::Message(){}
+Message::Message(){
+}
 
 void Message::copyFrom(const Message& m){
-	if(this->v_.capacity() < m.size()){
-		this->v_.reserve(m.size());	
-	}
 	this->v_.resize(m.size());
 	std::copy(m.begin(), m.begin() + m.size(), this->v_.begin());
 }
 
 void Message::initFrom(const void* src, size_t sz){
-	this->v_.reserve(sz);
+	this->v_.resize(sz);
 	const uint8_t* s = static_cast<const uint8_t*>(src);
 	std::copy(s, s + sz, this->v_.begin());
 }
