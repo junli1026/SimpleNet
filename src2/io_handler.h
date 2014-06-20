@@ -99,7 +99,7 @@ public:
 	bool contains(int fd);
 	void add(int fd);
 	void erase(int fd);
-	void doRead(int fd);
+	Message doRead(int fd);
 	void doWrite(int fd);
 	
 	IOHandler(std::shared_ptr<Poller> poller);
