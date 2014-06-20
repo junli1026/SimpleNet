@@ -39,16 +39,18 @@ class Acceptor{
 private:
 	std::shared_ptr<Poller> poller_;
 	std::map<int, std::shared_ptr<ASocket>> sockets_;
+	
 	Acceptor& operator=(const Acceptor& acceptor){}
 	Acceptor(const Acceptor& acceptor){}
+
 public:
-	Acceptor(std::shared_ptr<Poller> poller);
-	~Acceptor();
 	bool contains(int fd);
 	void erase(int fd);
+	void add(int fd);
 	int doAccept(int fd); //return new built connection fd
+	
+	Acceptor(std::shared_ptr<Poller> poller);
+	~Acceptor();
 }
-
-
 
 }
