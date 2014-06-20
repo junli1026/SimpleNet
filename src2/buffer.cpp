@@ -60,7 +60,6 @@ void Buffer::append(const Message& m){
 }
 
 void Buffer::clear(){
-	this->b_.clear();
 	this->rIndex_ = 0;
 	this->wIndex_ = 0;
 }
