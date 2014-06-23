@@ -16,7 +16,7 @@ private:
 	int wfd_;
 	int epfd_;
 	Buffer buf_;
-	std::queue<ControlWords> q_;
+	std::queue<Message> q_;
 	
 	Channel& operator=(const Channel& ch);
 	Channel(const Channel& ch);
