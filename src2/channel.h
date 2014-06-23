@@ -6,10 +6,9 @@
 #include <string>
 #include <stdint.h>
 #include "buffer.h"
+#include "message.h"
 
 namespace simple{
-
-typedef std::vector<std::string> ControlWords;
 
 class Channel{
 private:
@@ -25,9 +24,9 @@ private:
 public:
 	Channel();
 	~Channel();
-	bool hasControlWords();
-	void writeControlWords(const ControlWords& words);
-	ControlWords getControlWords();
+	bool hasMessage();
+	void writeMessage(const Message& m);
+	Message getMessage();
 
 };
 
