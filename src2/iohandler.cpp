@@ -84,4 +84,8 @@ std::shared_ptr<Buffer> IOHandler::getWriteBuffer(int fd){
 	}
 }
 
+std::map<int, std::shared_ptr<IOSocket>>& IOHandler::getSocketMap(){
+	return this->sockets_;	
+}
+
 }
