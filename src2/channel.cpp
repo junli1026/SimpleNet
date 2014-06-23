@@ -92,46 +92,31 @@ bool Channel::hasData(){
 	return false;	
 }
 
-bool Channel::hasControlWords(){
+bool Channel::hasMessage(){
 	while(hasData()){
 	}
-	std::vector<uint8_t> ret = this->buf_.retrieveBy("\r\n", 2);
+	std::vector<uint8_t> data = this->buf_.retrieveBy("\r\n", 2);
 	if(ret.size() > 0){
-		ControlWords w;
-		auto prev = ret.begin();
-		auto curr = std::find(prev, ret.end(), static_cast<uint8_t>('\0'));
-		while(curr != ret.end()){
-			w.push_back(std::string(prev, curr));
-			curr ++;
-			prev = curr;
-			curr = std::find(prev, ret.end(), static_cast<uint8_t>('\0'));
-		}
-		this->q_.push(w);
+		this->q_.push(Message(data));
 		return true;
 	}else{
 		return false;
 	}
 }
 
-ControlWords Channel::getControlWords(){
-	if(hasControlWords() || this->q_.size() > 0){
+Message Channel::getMessage(){
+	if(hasMessage() || this->q_.size() > 0){
 		auto ret = this->q_.front();
 		q_.pop();
 		return ret;
 	}else{
-		ControlWords v;
-		return v;
+		return Message();
 	}
 }
 
-void Channel::writeControlWords(const ControlWords& ws){
-	int n;
-	const char* tmp;
-	for(auto str: ws){
-		tmp = str.c_str();
-		n = write(this->wfd_, tmp, strlen(tmp) + 1);
-		assert(n == strlen(tmp) + 1);
-	}
+void Channel::writeMessage(const Message& m){
+	int n = write(this->wfd_, m.begin(), m.size());
+	assert(n == m.size());
 	n = write(this->wfd_, "\r\n", 2);
 	assert(n == 2);
 }
