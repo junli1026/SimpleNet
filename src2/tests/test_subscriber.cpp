@@ -1,4 +1,4 @@
-#include "../publish_subscribe/subscriber.cpp"
+#include "../publish_subscribe/subscriber.h"
 
 #include <iostream>
 #include <stdint.h>
@@ -6,7 +6,7 @@ using namespace std;
 
 int main(){
 	simple::Subscriber s;
-	s.doConnect("127.0.0.1", 8001);
+	s.subscribe("127.0.0.1", 8001);
 	
 	std::vector<uint8_t> v = s.receiveData();
 
