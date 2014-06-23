@@ -96,7 +96,7 @@ bool Channel::hasMessage(){
 	while(hasData()){
 	}
 	std::vector<uint8_t> data = this->buf_.retrieveBy("\r\n", 2);
-	if(ret.size() > 0){
+	if(data.size() > 0){
 		this->q_.push(Message(data));
 		return true;
 	}else{
