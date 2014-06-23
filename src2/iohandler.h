@@ -24,7 +24,8 @@ public:
 	void doWrite(int fd);	
 	std::shared_ptr<Buffer> getReadBuffer(int fd);
 	std::shared_ptr<Buffer> getWriteBuffer(int fd);
-
+	std::map<int, std::shared_ptr<IOSocket>>& getSocketMap();
+	
 	IOHandler();
 	~IOHandler();
 };
