@@ -1,16 +1,24 @@
 #ifndef _RR_CLIENT_
 #define _RR_CLIENT_
 
-#include "../tcp_client.h"
+#include "../connector.h"
 #include <vector>
 
 namespace simple{
 
-class RRClient: public TcpClient{
+class RRClient{
 private:
+	int fd_;
+	Connector connector_;
+	RRClient(const RRClient&){}
+	RRClient& operator=(const RRClient&) {}
 
 public:
-
+	void doConnect(const char* host, int port);
+	void sendData(const void* src, size_t sz, bool end);
+	std::vector<uint8_t> receiveData();
+	RRClient();
+	~RRClient();
 };
 
 }

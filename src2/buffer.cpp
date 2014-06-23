@@ -47,7 +47,7 @@ void Buffer::append(const void* src, size_t len){
 	this->wIndex_ += len;
 }
 
-void Buffer::append(std::vector<uint8_t> v){
+void Buffer::append(const std::vector<uint8_t>& v){
 	expand(v.size());
 	std::copy(v.begin(), v.end(), this->b_.begin() + this->wIndex_);
 	this->wIndex_ += v.size();

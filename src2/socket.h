@@ -66,12 +66,12 @@ public:
 		this->rbuf_ = std::make_shared<Buffer>();
 	}
 
-	Buffer* getWriteBuffer(){
-		return this->wbuf_.get();
+	std::shared_ptr<Buffer> writeBuffer(){
+		return this->wbuf_;
 	}
 
-	Buffer* getReadBuffer(){
-		return this->rbuf_.get();
+	std::shared_ptr<Buffer> readBuffer(){
+		return this->rbuf_;
 	}
 };
 

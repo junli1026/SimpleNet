@@ -1,53 +1,49 @@
-#ifndef _RR_SERVER_H_
-#define _RR_SERVER_H_
-
-#include "../tcp_server.h"
 #include <memory>
 #include <iostream>
 #include <string.h>
+#include "rr_server.h"
 
 namespace simple{
-class RRServer : public TcpServer 
-{
-public:
-	RRServer(){}
-	~RRServer(){}
 
-	void acceptContinuous(const Context& ctx) override{
-		int newfd = ctx.connfd;
-		std::shared_ptr<IOSocket> s = std::make_shared<IOSocket>(newfd);
-		s->setNonBlock();
-		auto ret = this->ioSockets_.insert(std::pair<int, std::shared_ptr<IOSocket>> (newfd, s));
-		if(ret.second == false){
-			std::cout << newfd << "already exists" << std::endl;
-			return;
-		}
-		this->poller_.addRead(newfd);
-	}
+RRServer::RRServer(){}
 
-	void readContinuous(const Context& ctx, IOSocket* s) override{
-		auto buf = s->getReadBuffer();
-		std::vector<uint8_t> data = buf->retrieveBy("\r\n", 2);
-		if(data.size() == 0){
-			return;
-		}else{ // got an complete package, ending with "\r\n"		
-			for(auto a: data){
-				std::cout << a;
-			}
-			std::cout << std::endl;
-			this->poller_.mod2Write(s->getFd());
+RRServer::~RRServer(){}
 
-			const char* response = "this is a response\r\n";
-			s->getWriteBuffer()->append(response, strlen(response));
-		}
-	}
-
-	virtual void writeContinuous(const Context& ctx, IOSocket* s) override{
-		auto buf = s->getWriteBuffer();
-		if(buf->size() == 0){ //all data has been write to system buffer
-			this->poller_.mod2Read(s->getFd());
-		}
-	}
-};
+void RRServer::acceptContinuous(int newfd){
+	this->iohandler_.add(newfd);
+	this->poller_.addRead(newfd);
 }
-#endif
+
+void RRServer::readContinuous(int fd){
+	auto rbuf = this->iohandler_.getReadBuffer(fd);
+	auto wbuf = this->iohandler_.getWriteBuffer(fd);
+	std::vector<uint8_t> data = rbuf->retrieveBy("\r\n", 2);
+	if(data.size() == 0){
+		return;
+	}else{ // got an complete package, ending with "\r\n"		
+		if(this->response_ != nullptr){
+			Message r = this->response_(Message(data));
+			wbuf->append(r.begin(), r.size());
+		}
+		this->poller_.mod2Write(fd);
+	}
+}
+
+void RRServer::writeContinuous(int fd){
+	auto wbuf = this->iohandler_.getWriteBuffer(fd);
+	if(wbuf->size() == 0){ //all data has been write to system buffer
+		this->poller_.mod2Read(fd);
+	}
+}
+
+void RRServer::onRequest(std::function<Message(Message)> cb){
+	this->response_ = cb;
+}
+
+void RRServer::loop(){
+	while(true){
+		this->run();
+	}
+}
+
+}

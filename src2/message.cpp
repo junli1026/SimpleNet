@@ -21,6 +21,10 @@ void Message::initFrom(const void* src, size_t sz){
 	std::copy(s, s + sz, this->v_.begin());
 }
 
+Message::Message(const std::vector<uint8_t>& v){
+	this->initFrom(&v[0], v.size());
+}
+
 Message::Message(const void* src, size_t sz){
 	this->initFrom(src, sz);
 }

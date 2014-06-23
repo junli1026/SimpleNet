@@ -1,3 +1,6 @@
+#ifndef _CONNECTOR_H_
+#define _CONNECTOR_H_
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -8,6 +11,7 @@
 
 class Connector{
 private:
+	
 	Connector& operator=(const Connector& Connector){}
 	Connector(const Connector& Connector){}
 public:
@@ -39,3 +43,5 @@ public:
 	Connector(){}
 	~Connector(){}
 };
+
+#endif

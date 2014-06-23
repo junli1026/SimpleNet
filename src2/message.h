@@ -13,6 +13,7 @@ private:
 	void copyFrom(const Message& m);
 	void initFrom(const void* src, size_t t);
 public:
+	Message(const std::vector<uint8_t>& v);
 	Message(const void* src, size_t sz);
 	Message(const std::string str);
 	Message(const Message& m);
