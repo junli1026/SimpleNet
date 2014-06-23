@@ -3,8 +3,9 @@ SRC=../src2
 
 target:\
 	buffer.o poller.o channel.o message.o tcp_server.o iohandler.o acceptor.o\
-	rr_server.o rr_client.o publisher.o \
-	TestRRClient TestRRServer TestPublisher
+	rr_server.o rr_client.o \
+	publisher.o subscriber.o \
+	TestRRClient TestRRServer TestPublisher TestSubscriber
 
 buffer.o:
 	$(CC) $(SRC)/buffer.cpp -c -std=c++11 
@@ -28,13 +29,14 @@ rr_server.o:
 
 publisher.o:
 	$(CC) $(SRC)/publish_subscribe/publisher.cpp -c -std=c++11
-
+subscriber.o:
+	$(CC) $(SRC)/publish_subscribe/subscriber.cpp -c -std=c++11
 
 
 TestPublisher:
 	$(CC) $(SRC)/tests/test_publisher.cpp -o TestPublisher publisher.o tcp_server.o poller.o buffer.o message.o channel.o acceptor.o iohandler.o -lpthread -std=c++11 
-#TestSubscriber:
-#	$(CC) $(SRC)/tests/test_subscriber.cpp -o TestSubscriber tcp_client.o message.o -std=c++11
+TestSubscriber:
+	$(CC) $(SRC)/tests/test_subscriber.cpp -o TestSubscriber subscriber.o message.o buffer.o -std=c++11
 
 TestRRClient:
 	$(CC) $(SRC)/tests/test_rr_client.cpp -o TestRRClient rr_client.o message.o buffer.o -std=c++11
@@ -47,3 +49,4 @@ clean:
 	rm -rf TestRRServer
 	rm -rf TestPublisher
 	rm -rf TestSubscriber
+
