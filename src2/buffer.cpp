@@ -84,24 +84,25 @@ size_t Buffer::size() const{
 	return this->wIndex_ - this->rIndex_;
 }
 
-std::vector<uint8_t> Buffer::retrieveBy(const void* separator, size_t sz){
+Block Buffer::retrieveBy(const void* separator, size_t sz){
+	if(seperator == NULL || sz == 0){
+		return Block();
+	}
+	
 	auto first = this->b_.begin() + this->rIndex_;
 	auto last = this->b_.begin() + this->wIndex_;
-	std::vector<uint8_t> ret;
 	if(first == last){
-		return ret;
+		return Block();
 	}
 
 	const uint8_t* s = static_cast<const uint8_t*>(separator);
-	if(s == NULL){ //that is, seperator is null
-		return ret;
-	}
 	auto it = std::search(first, last, s, s+sz); 
 	if(it == last){
 		return ret;
 	}
-	ret.resize(it - first);
-	std::copy(first, it , ret.begin());
+	
+	size_t bsz = it - first;
+	Block ret(&this->b_[this->rIndex_], bsz);
 	this->rIndex_ += it - first + sz;
 	
 	if(this->rIndex_  > MaxEmptyHead){
