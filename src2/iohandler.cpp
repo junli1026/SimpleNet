@@ -50,7 +50,6 @@ void IOHandler::doWrite(int fd){
 	auto s = this->sockets_.find(fd)->second;
 	auto buf = s->writeBuffer();
 	if(buf->size() == 0){
-		std::cout << "buffer size " << std::endl;
 		return;
 	}
 	size_t sz = 1024;

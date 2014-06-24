@@ -10,8 +10,8 @@
 
 namespace simple{
 
-const Message CMDPublish("CMDPublish");
-const Message CMDClose("CMDClose");
+Message CMDPublish("CMDPublish");
+Message CMDClose("CMDClose");
 
 Publisher::Publisher(const char* ip, int port){
 	this->ip_ = std::string(ip, strlen(ip));
@@ -34,13 +34,13 @@ void Publisher::sendCommand(const Message& m){
 	this->channel_.writeMessage(m);
 }
 
-void run(void* data){
-	//Publisher* p = static_cast<Publisher*>(data);
-	//p->loop();
+void* runThread(void* data){
+	Publisher* p = static_cast<Publisher*>(data);
+	p->loop();
 }
 
 void Publisher::runService(){
-	//pthread_create(&this->serviceId_, NULL, run, this);
+	pthread_create(&this->serviceId_, NULL, &runThread, this);
 }
 
 void Publisher::stopService(){
@@ -57,18 +57,19 @@ void Publisher::publish(const void* src, size_t sz){
 
 void Publisher::loop(){
 	while(true){
-		if(this->channel_.hasMessage()){
+		if(this->channel_.hasMessage()){			
 			Message cmd = this->channel_.getMessage();
 			if(cmd == CMDPublish){
 				assert(mq_.size() > 0);
 				Message msg = mq_.front();
-				mq_.pop();			 
+				mq_.pop();
 				for(auto m : this->iohandler_.getSocketMap()){
 					m.second->writeBuffer()->append(msg);
+					m.second->writeBuffer()->append("\r\n", 2);
 				}
 			}else{ // must to close or error happened
 				break;
-			}
+			}	
 		}
 		this->run();
 	}

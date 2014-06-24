@@ -100,7 +100,7 @@ bool Channel::hasMessage(){
 		this->q_.push(Message(data));
 		return true;
 	}else{
-		return false;
+		return q_.size() > 0;
 	}
 }
 
@@ -128,21 +128,17 @@ using namespace simple;
 int main(){
 	Channel c;
 
-	ControlWords words;
-	words.push_back("this is a test");
-	words.push_back("hello world");
-	words.push_back("junli");
+	c.writeMessage(Message("thisis one"));;
+	c.writeMessage(Message("this is message two"));
+	c.writeMessage(Message("hello world"));
 
-	c.writeControlWords(words);
-
-	if(c.hasControlWords()){
-		auto ret = c.getControlWords();
-		for(std::string str: ret){
-			std::cout << str << std::endl;
+	while(true){
+		if(c.hasMessage()){
+			auto ret = c.getMessage();
+			std::cout << ret.dump2String() << std::endl;
 			fflush(stdout);
 		}
 	}
-
 }
 */
 

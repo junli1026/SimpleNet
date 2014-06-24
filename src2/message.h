@@ -24,6 +24,7 @@ public:
 	bool operator==(const Message& rhs) const;
 	bool operator!=(const Message& rhs) const;
 
+	std::string dump2String();
 	const uint8_t* begin() const;
 	size_t size() const;
 	bool empty() const;

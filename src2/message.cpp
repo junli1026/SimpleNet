@@ -76,6 +76,13 @@ bool Message::empty() const{
 	return (this->size() == 0);	
 }
 
+std::string Message::dump2String(){
+	if(this->v_.size() == 0){
+		return std::string();
+	}
+	return std::string(this->v_.begin(), this->v_.end());
+}
+
 }
 
 /*

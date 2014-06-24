@@ -19,11 +19,11 @@ private:
 	Channel channel_;
 	
 	void sendCommand(const Message& m);
-	void loop();
 	Publisher(){}
 public:
 	Publisher(const char* ip, int port);
 	~Publisher();
+	void loop();
 
 	void runService();
 	void stopService();

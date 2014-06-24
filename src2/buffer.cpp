@@ -100,8 +100,8 @@ std::vector<uint8_t> Buffer::retrieveBy(const void* separator, size_t sz){
 	if(it == last){
 		return ret;
 	}
-	ret.resize(it + sz - first);
-	std::copy(first, it + sz, ret.begin());
+	ret.resize(it - first);
+	std::copy(first, it , ret.begin());
 	this->rIndex_ += it - first + sz;
 	
 	if(this->rIndex_  > MaxEmptyHead){
