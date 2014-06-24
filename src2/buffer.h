@@ -32,11 +32,13 @@ public:
 	void truncate(size_t sz);
 	size_t size() const;
 	const uint8_t* begin() const;
-	std::vector<uint8_t> retrieveBy(const void* separator, size_t sz);
-
+	
+	Block retrieveBy(const void* separator, size_t sz); //return the data before first seperator
+	int retrieveInt();
+	
 	void append(const void* src, size_t len);
 	void append(const std::vector<uint8_t>& v);
-	void append(const Message& m);
+	void append(const Block& b);
 };
 
 }
