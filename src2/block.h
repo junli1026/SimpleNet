@@ -2,8 +2,8 @@
 #include <string>
 
 namespace simple{
-class Block
-{
+
+class Block{
 private:
 	uint8_t* data_;
 	size_t sz_;
