@@ -4,8 +4,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <vector>
-
-#include "message.h"
+#include <memory>
+#include "block.h"
 
 namespace simple{
 
@@ -33,8 +33,8 @@ public:
 	size_t size() const;
 	const uint8_t* begin() const;
 	
-	Block retrieveBy(const void* separator, size_t sz); //return the data before first seperator,
-							//seperator is not included in the returned block;
+	std::shared_ptr<Block> retrieveBy(const void* separator, size_t sz); //return the data before first seperator,
+									//seperator is not included in the returned block;
 	int retrieveInt();
 	
 	void append(const void* src, size_t len);
