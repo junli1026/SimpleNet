@@ -35,7 +35,8 @@ public:
 	
 	std::shared_ptr<Block> retrieveBy(const void* separator, size_t sz); //return the data before first seperator,
 									//seperator is not included in the returned block;
-	int retrieveInt();//return the first integer
+	
+	int retrieveInt();//return the first integer, if buffer size < sizeof(int), 0 is returned and nothing happened to buffer
 			 // this is for data format [data_size | data ...] 
 	
 	void append(const void* src, size_t len);
