@@ -12,6 +12,7 @@ namespace simple{
 const int DefaultBufferSize = 64;
 const int MaxEmptyHead = 1024;
 
+//this class does not provide any method to cut package; user can use CRLF as seperator or other mechanism to handle that
 class Buffer{
 private:
 	std::vector<uint8_t> b_;
