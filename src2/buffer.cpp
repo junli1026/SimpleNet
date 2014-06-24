@@ -84,15 +84,15 @@ size_t Buffer::size() const{
 	return this->wIndex_ - this->rIndex_;
 }
 
-Block Buffer::retrieveBy(const void* separator, size_t sz){
+std::shared_ptr<Block> Buffer::retrieveBy(const void* separator, size_t sz){
 	if(seperator == NULL || sz == 0){
-		return Block();
+		return nullptr;
 	}
 	
 	auto first = this->b_.begin() + this->rIndex_;
 	auto last = this->b_.begin() + this->wIndex_;
 	if(first == last){
-		return Block();
+		return nullptr;
 	}
 
 	const uint8_t* s = static_cast<const uint8_t*>(separator);
@@ -102,7 +102,7 @@ Block Buffer::retrieveBy(const void* separator, size_t sz){
 	}
 	
 	size_t bsz = it - first;
-	Block ret(&this->b_[this->rIndex_], bsz);
+	auto ret = std::make_shared<Block>(&this->b_[this->rIndex_], bsz);
 	this->rIndex_ += it - first + sz;
 	
 	if(this->rIndex_  > MaxEmptyHead){
@@ -110,6 +110,16 @@ Block Buffer::retrieveBy(const void* separator, size_t sz){
 	}
 	return ret;
 } 
+
+int Buffer::retrieveInt(){
+	if(this->size() < sizeof(int)){
+		return 0;
+	}else{
+		int ret = *static_cast<const int*>(this->begin());	
+		this->truncate(sizeof(int));
+		return ret;
+	}
+}
 
 }
 
