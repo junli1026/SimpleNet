@@ -102,6 +102,11 @@ std::shared_ptr<Block> Buffer::retrieveBy(const void* separator, size_t sz){
 	}
 	
 	size_t bsz = it - first;
+	if(bsz == 0){
+		this->rIndex_ += sz;
+		return nullptr;
+	}
+	
 	auto ret = std::make_shared<Block>(&this->b_[this->rIndex_], bsz);
 	this->rIndex_ += it - first + sz;
 	
