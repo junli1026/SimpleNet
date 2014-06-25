@@ -7,13 +7,12 @@
 #include <sys/epoll.h>
 #include <assert.h>
 #include <algorithm>
+#include <memory>
 #include "channel.h"
-
-using namespace std;
 
 namespace simple{
 
-int set_fd_nonblocking(int fd){
+inline int set_fd_nonblocking(int fd){
     int flag = fcntl(fd, F_GETFL, 0);
     if (-1 == flag) {
         return -1;
@@ -95,28 +94,29 @@ bool Channel::hasData(){
 bool Channel::hasMessage(){
 	while(hasData()){
 	}
-	std::vector<uint8_t> data = this->buf_.retrieveBy("\r\n", 2);
-	if(data.size() > 0){
-		this->q_.push(Message(data));
+	auto b = this->buf_.retrieveBy("\r\n", 2);
+	if(b != nullptr){
+		this->q_.push(b->dump2String());
 		return true;
 	}else{
 		return q_.size() > 0;
 	}
 }
 
-Message Channel::getMessage(){
+std::string Channel::getMessage(){
 	if(hasMessage() || this->q_.size() > 0){
 		auto ret = this->q_.front();
 		q_.pop();
 		return ret;
 	}else{
-		return Message();
+		return nullptr;
 	}
 }
 
-void Channel::writeMessage(const Message& m){
-	int n = write(this->wfd_, m.begin(), m.size());
-	assert(n == m.size());
+void Channel::writeMessage(const std::string& str){
+	Block b(str);
+	int n = write(this->wfd_, b.begin(), b.size());
+	assert(n == b.size());
 	n = write(this->wfd_, "\r\n", 2);
 	assert(n == 2);
 }

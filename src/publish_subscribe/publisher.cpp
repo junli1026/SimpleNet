@@ -6,12 +6,13 @@
 #include "../tcp_server.h"
 #include "../channel.h"
 #include "../buffer.h"
+#include "../block.h"
 #include "publisher.h"
 
 namespace simple{
 
-Message CMDPublish("CMDPublish");
-Message CMDClose("CMDClose");
+const std::string CMDClose("CMDClose");
+const std::string CMDPublish("CMDPublish");
 
 Publisher::Publisher(const char* ip, int port){
 	this->ip_ = std::string(ip, strlen(ip));
@@ -30,8 +31,8 @@ void Publisher::readContinuous(int fd){}
 
 void Publisher::writeContinuous(int fd){}
 
-void Publisher::sendCommand(const Message& m){
-	this->channel_.writeMessage(m);
+void Publisher::sendCommand(const std::string& cmd){
+	this->channel_.writeMessage(cmd);
 }
 
 void* runThread(void* data){
@@ -51,20 +52,21 @@ void Publisher::publish(const void* src, size_t sz){
 	if(src == NULL || sz == 0){
 		return;
 	}
-	this->mq_.push(Message(src, sz));
+	std::shared_ptr<Block> b = std::make_shared<Block>(src, sz);
+	this->mq_.push(b);
 	sendCommand(CMDPublish);
 }
 
 void Publisher::loop(){
 	while(true){
 		if(this->channel_.hasMessage()){			
-			Message cmd = this->channel_.getMessage();
+			std::string cmd = this->channel_.getMessage();
 			if(cmd == CMDPublish){
 				assert(mq_.size() > 0);
-				Message msg = mq_.front();
+				std::shared_ptr<Block> msg = mq_.front();
 				mq_.pop();
 				for(auto m : this->iohandler_.getSocketMap()){
-					m.second->writeBuffer()->append(msg);
+					m.second->writeBuffer()->append(msg->begin(), msg->size());
 					m.second->writeBuffer()->append("\r\n", 2);
 				}
 			}else{ // must to close or error happened

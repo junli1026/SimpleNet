@@ -1,4 +1,6 @@
+#include <memory>
 #include "../buffer.h"
+#include "../block.h"
 #include "rr_client.h"
 
 namespace simple{
@@ -21,16 +23,16 @@ void RRClient::sendData(const void* src, size_t sz, bool end){
 
 std::vector<uint8_t> RRClient::receiveData(){
 	Buffer buf;
-	std::vector<uint8_t> ret;
+	std::shared_ptr<Block> ret;
 	uint8_t b[1024];
 	int n;
 	while((n = read(this->fd_, b, 1024)) > 0){
 		buf.append(b, n);
 		ret = buf.retrieveBy("\r\n", 2);
-		if(ret.size() != 0){
+		if(ret != nullptr){
 			break;
 		}
 	}
-	return ret;
+	return std::vector<uint8_t>(ret->begin(), ret->begin() + ret->size());
 }
 }

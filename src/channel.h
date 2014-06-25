@@ -6,7 +6,7 @@
 #include <string>
 #include <stdint.h>
 #include "buffer.h"
-#include "message.h"
+#include "block.h"
 
 namespace simple{
 
@@ -16,17 +16,17 @@ private:
 	int wfd_;
 	int epfd_;
 	Buffer buf_;
-	std::queue<Message> q_;
+	std::queue<std::string> q_;
 	
-	Channel& operator=(const Channel& ch);
-	Channel(const Channel& ch);
+	Channel& operator=(const Channel& ch){}
+	Channel(const Channel& ch){}
 	bool hasData();
 public:
 	Channel();
 	~Channel();
 	bool hasMessage();
-	void writeMessage(const Message& m);
-	Message getMessage();
+	void writeMessage(const std::string& str);
+	std::string getMessage();
 
 };
 

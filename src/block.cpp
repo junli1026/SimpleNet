@@ -39,6 +39,10 @@ Block::Block(const Block& b){
 	copyFrom(b.begin(), b.size());
 }
 
+Block::Block(const std::shared_ptr<Block> &b){
+	copyFrom(b->begin(), b->size());
+}
+
 Block& Block::operator=(const Block& rhs){
 	copyFrom(rhs.begin(), rhs.size());
 	return *this;
@@ -88,7 +92,7 @@ std::string Block::dump2String(){
 	if(this->data_[this->sz_ -1] != '\0'){
 		return std::string();
 	} else{
-		return std::string(this->begin(), this->begin() + this->size());
+		return std::string(this->begin(), this->begin() + this->size()-1);
 	}
 }
 

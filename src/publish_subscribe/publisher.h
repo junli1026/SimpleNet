@@ -3,9 +3,10 @@
 
 #include <vector>
 #include <queue>
+#
 #include "../tcp_server.h"
 #include "../channel.h"
-#include "../message.h"
+#include "../block.h"
 
 namespace simple{
 
@@ -14,11 +15,11 @@ private:
 	std::string ip_;
 	int port_;
 	pthread_t serviceId_;
-	typedef std::queue<Message> MessageQueue;
+	typedef std::queue<std::shared_ptr<Block>> MessageQueue;
 	MessageQueue mq_; //not necessary to be a thread-safe queue
 	Channel channel_;
 	
-	void sendCommand(const Message& m);
+	void sendCommand(const std::string& str);
 	Publisher(){}
 public:
 	Publisher(const char* ip, int port);

@@ -17,13 +17,14 @@ void RRServer::acceptContinuous(int newfd){
 void RRServer::readContinuous(int fd){
 	auto rbuf = this->iohandler_.getReadBuffer(fd);
 	auto wbuf = this->iohandler_.getWriteBuffer(fd);
-	std::vector<uint8_t> data = rbuf->retrieveBy("\r\n", 2);
-	if(data.size() == 0){
+	std::shared_ptr<Block> b = rbuf->retrieveBy("\r\n", 2);
+	if(b == nullptr){
 		return;
 	}else{ // got an complete package, ending with "\r\n"		
 		if(this->response_ != nullptr){
-			Message r = this->response_(Message(data));
-			wbuf->append(r.begin(), r.size());
+			Block resp = this->response_(b);
+			wbuf->append(resp.begin(), resp.size());
+			wbuf->append("\r\n", 2);
 		}
 		this->poller_.mod2Write(fd);
 	}
@@ -36,7 +37,7 @@ void RRServer::writeContinuous(int fd){
 	}
 }
 
-void RRServer::onRequest(std::function<Message(Message)> cb){
+void RRServer::onRequest(std::function<Block(std::shared_ptr<Block>)> cb){
 	this->response_ = cb;
 }
 

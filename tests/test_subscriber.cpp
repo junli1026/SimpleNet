@@ -1,4 +1,4 @@
-#include "../publish_subscribe/subscriber.h"
+#include "../src/publish_subscribe/subscriber.h"
 
 #include <iostream>
 #include <stdint.h>

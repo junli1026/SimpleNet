@@ -53,10 +53,10 @@ void Buffer::append(const std::vector<uint8_t>& v){
 	this->wIndex_ += v.size();
 }
 
-void Buffer::append(const Message& m){
-	expand(m.size());
-	std::copy(m.begin(), m.begin() + m.size(), this->b_.begin() + this->wIndex_);
-	this->wIndex_ += m.size();
+void Buffer::append(const Block& b){
+	expand(b.size());
+	std::copy(b.begin(), b.begin() + b.size(), this->b_.begin() + this->wIndex_);
+	this->wIndex_ += b.size();
 }
 
 void Buffer::clear(){
@@ -85,7 +85,7 @@ size_t Buffer::size() const{
 }
 
 std::shared_ptr<Block> Buffer::retrieveBy(const void* separator, size_t sz){
-	if(seperator == NULL || sz == 0){
+	if(separator == NULL || sz == 0){
 		return nullptr;
 	}
 	
@@ -98,7 +98,7 @@ std::shared_ptr<Block> Buffer::retrieveBy(const void* separator, size_t sz){
 	const uint8_t* s = static_cast<const uint8_t*>(separator);
 	auto it = std::search(first, last, s, s+sz); 
 	if(it == last){
-		return ret;
+		return nullptr;
 	}
 	
 	size_t bsz = it - first;
@@ -115,7 +115,7 @@ int Buffer::retrieveInt(){
 	if(this->size() < sizeof(int)){
 		return 0;
 	}else{
-		int ret = *static_cast<const int*>(this->begin());	
+		int ret = *(int*)this->begin();
 		this->truncate(sizeof(int));
 		return ret;
 	}

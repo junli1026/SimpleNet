@@ -1,5 +1,9 @@
+#ifndef _BLOCK_H_
+#define _BLOCK_H_
+
 #include <stdint.h>
 #include <string>
+#include <memory>
 
 namespace simple{
 
@@ -13,10 +17,11 @@ private:
 	Block(){}
 
 public:
+	Block(const std::string& str);
+	Block(const char* str);
+	Block(const Block& b);
+	Block(const std::shared_ptr<Block> &b);
 	Block(const void* src, size_t sz);
-	explicit Block(const std::string& str);
-	explicit Block(const char* str);
-	explicit Block(const Block& b);
 	~Block();
 
 	Block& operator=(const Block& rhs);
@@ -32,4 +37,5 @@ public:
 	std::string dump2String();
 };
 }
+#endif
 
