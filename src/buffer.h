@@ -1,18 +1,49 @@
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
-struct buffer;
+#include <string.h>
+#include <stdint.h>
+#include <vector>
+#include <memory>
+#include "block.h"
 
-struct buffer* buffer_new(int capacity);
+namespace simple{
 
-void buffer_delete(struct buffer** buffer_addr);
+const int DefaultBufferSize = 64;
+const int MaxEmptyHead = 1024;
 
-void* buffer_data(struct buffer* buf, size_t* sz);
+//this class does not provide any method to cut package; user can use CRLF as seperator or other mechanism to handle that
+class Buffer{
+private:
+	std::vector<uint8_t> b_;
+	int rIndex_;
+	int wIndex_;
+	void removeEmptyHead();
+	void expand(size_t);
 
-int buffer_append(struct buffer* buf, void* data, size_t len);
+	Buffer& operator=(const Buffer& rhs){}
+	Buffer(const Buffer&){}
 
-void buffer_truncate(struct buffer* buf, size_t n);
+public:
+	Buffer();
+	~Buffer();
 
-void buffer_clear(struct buffer* buf);
+	void clear();
+	void truncate(size_t sz);
+	size_t size() const;
+	const uint8_t* begin() const;
+	
+	std::shared_ptr<Block> retrieveBy(const void* separator, size_t sz); //return the data before first seperator,
+									//seperator is not included in the returned block;
+	
+	int retrieveInt();//return the first integer, if buffer size < sizeof(int), 0 is returned and nothing happened to buffer
+			 // this is for data format [data_size | data ...] 
+	
+	void append(const void* src, size_t len);
+	void append(const std::vector<uint8_t>& v);
+	void append(const Block& b);
+};
+
+}
 
 #endif
