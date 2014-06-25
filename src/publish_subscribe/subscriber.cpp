@@ -15,7 +15,7 @@ void Subscriber::subscribe(const char* host, int port){
 
 std::vector<uint8_t> Subscriber::receiveData(){
 	Buffer buf;
-	std::shared_ptr<Block> ret;
+	std::shared_ptr<Block> ret = nullptr;
 	uint8_t b[1024];
 	int n;
 	while((n = read(this->fd_, b, 1024)) > 0){
@@ -25,7 +25,11 @@ std::vector<uint8_t> Subscriber::receiveData(){
 			break;
 		}
 	}
-	return std::vector<uint8_t>(ret->begin(), ret->begin() + ret->size());
+	if(ret != nullptr){
+		return std::vector<uint8_t>(ret->begin(), ret->begin() + ret->size());
+	}else{
+		return std::vector<uint8_t>();
+	}
 }
 
 }
