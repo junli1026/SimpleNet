@@ -1,11 +1,14 @@
 #include <memory>
 #include <iostream>
 #include <string.h>
+#include <assert.h>
 #include "rr_server.h"
 
 namespace simple{
 
-RRServer::RRServer(){}
+RRServer::RRServer(){
+	this->response_ = nullptr;
+}
 
 RRServer::~RRServer(){}
 
@@ -20,7 +23,7 @@ void RRServer::readContinuous(int fd){
 	std::shared_ptr<Block> b = rbuf->retrieveBy("\r\n", 2);
 	if(b == nullptr){
 		return;
-	}else{ // got an complete package, ending with "\r\n"		
+	}else{ // got an complete package, ending with "\r\n"	
 		if(this->response_ != nullptr){
 			Block resp = this->response_(b);
 			wbuf->append(resp.begin(), resp.size());
@@ -28,6 +31,7 @@ void RRServer::readContinuous(int fd){
 		}
 		this->poller_.mod2Write(fd);
 	}
+
 }
 
 void RRServer::writeContinuous(int fd){

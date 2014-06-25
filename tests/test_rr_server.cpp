@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <iostream>
 
 using namespace simple;
 int main(){

@@ -36,11 +36,11 @@ Block::Block(const char* str){
 }
 
 Block::Block(const Block& b){
-	copyFrom(b.begin(), b.size());
+	initFrom(b.begin(), b.size());
 }
 
-Block::Block(const std::shared_ptr<Block> &b){
-	copyFrom(b->begin(), b->size());
+Block::Block(const std::shared_ptr<Block>& b){
+	initFrom(b->begin(), b->size());
 }
 
 Block& Block::operator=(const Block& rhs){
