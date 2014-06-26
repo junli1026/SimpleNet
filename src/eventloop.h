@@ -7,6 +7,12 @@ namespace simple{
 class EventLoop{
 
 private:
+	bool acceptCmd_; //whether accept internal command from channel
+	//bool acceptSock_; //whether accept coming connetcion
+	
+	std::function<void(std::string)> cmdhandler_; // 
+	
+	
 	std::shared_ptr<Channel> channelptr_;
 	std::shared_ptr<Connector> connectorptr_;
 	std::shared_ptr<Acceptor> acceptorptr_;
@@ -14,7 +20,7 @@ private:
 	bool hasPipeEvent();
 	bool hasSocketEvent();
 	
-	std::function<void(Connection&)> acceptcb_;
+	std::function<(Connection&)> acceptcb_;
 	std::function<void(Connection&)> readcb_;
 	std::function<void(Connection&)> writecb_;
 	std::function<void(Connection&)> connectcb_;
