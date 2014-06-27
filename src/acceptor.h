@@ -2,14 +2,14 @@
 #define _ACCEPTOR_H_
 
 #include <memory>
-#include <map>
-#include "socket.h"
+#include <set>
+#include "connection.h"
 
 namespace simple{
 
 class Acceptor{
 private:
-	std::map<int, std::shared_ptr<ASocket>> sockets_;
+	std::set<int> fds_;
 	
 	Acceptor& operator=(const Acceptor& acceptor){}
 	Acceptor(const Acceptor& acceptor){}
@@ -18,7 +18,7 @@ public:
 	bool contains(int fd);
 	void erase(int fd);
 	void add(int fd);
-	int doAccept(int fd); //return new built connection fd
+	std::shared_ptr<Connection> doAccept(int fd); //return new built connection fd
 	
 	Acceptor();
 	~Acceptor();
