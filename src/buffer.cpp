@@ -62,6 +62,7 @@ void Buffer::append(const Block& b){
 void Buffer::clear(){
 	this->rIndex_ = 0;
 	this->wIndex_ = 0;
+	this->b_.clear();
 }
 
 const uint8_t* Buffer::begin() const{
