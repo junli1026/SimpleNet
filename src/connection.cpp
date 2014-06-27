@@ -11,12 +11,7 @@ Connection::Connection(int fd, bool isClient, bool nonblock){
 	this->status_ = ConnAlive;
 	this->fd_ = fd;
 	if(nonblock){
-	    int flag = fcntl(this->fd_, F_GETFL, 0);
-	    if (-1 == flag){
-	    	//to do: throw exception
-	    	return;
-	    }
-	    fcntl(this->fd_, F_SETFL, flag | O_NONBLOCK);
+	    this->setNonblock();
 	}
 	if(this->fd_ < 0){
 		this->status_ = ConnError;
@@ -57,6 +52,15 @@ bool Connection::isServer(){
 
 int Connection::fd(){
 	return this->fd_;
+}
+
+void Connection::setNonblock(){
+	int flag = fcntl(this->fd_, F_GETFL, 0);
+	if (-1 == flag){
+    	//to do: throw exception
+    	return;
+    }
+    fcntl(this->fd_, F_SETFL, flag | O_NONBLOCK);
 }
 
 void Connection::doClose(){

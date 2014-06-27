@@ -37,6 +37,7 @@ public:
 	bool isClient();
 	bool isServer();
 	void doClose();
+	void setNonblock();
 	int fd();
 };
 
