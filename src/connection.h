@@ -7,35 +7,37 @@
 namespace simple{
 
 enum ConnectionStatus{
-  ConnAlive,
-  ConnClosing,
-  ConnClosed,
-  ConnError
+	ConnAlive,
+	ConnClosing,
+	ConnClosed,
+	ConnError
 };
 
 class Connection{
 private:
 	ConnectionStatus status_;
-	bool readable_;
-	bool writeable_;
 	bool isClient_;  //connection is connected by client or accepted by server 
+	int fd_;
 	std::shared_ptr<Buffer> wbufptr_;
 	std::shared_ptr<Buffer> rbufptr_;
-	int fd_;
-
+	
 	Connection& operator=(const Connection& c){}
 	Connection(const Connection& c){}
 	
 public:
-	Connection(int fd, bool enableRead, bool enableWrite, bool isClient);
+	Connection(int fd,bool isClient, bool nonblock);
 	~Connection();
 
-  std::shared_ptr<Buffer> readBuffer();
-  std::shared_ptr<Buffer> writeBuffer();
-  ConnectionStatus status();
-  bool isClient();
-  bool isServer();
-  void close();
+	std::shared_ptr<Buffer> readBuffer();
+	std::shared_ptr<Buffer> writeBuffer();
+	void setStatus(ConnectionStatus);
+	ConnectionStatus status();
+	void setClient();
+	void setServer();
+	bool isClient();
+	bool isServer();
+	void doClose();
+	int fd();
 };
 
 }
