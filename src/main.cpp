@@ -4,26 +4,22 @@
 #include <string>
 
 class Tester{
+private:
+	int data;
+	
+	Tester& operator=(const Tester& t){}
 public:
-	template<typename T>
-	T Say(int a, std::function<T(int)> f){
-		return f(a);
-	}
+	Tester(int d){this->data = d;}
+	int getData(){return this->data;}
+	Tester(const Tester& t){}
 };
 
-int main(){
-	/*
-	auto f = [](int a ){
-		std::cout << a << std::endl; 
-		return std::string("hello world");
-	};
-	Tester t;
-	std::string ret = t.Say<std::string>(12, f);
-	std::cout << ret;
-	*/
 
-	std::function<int(int)> test;
-	if(test == nullptr){
-		std::cout << "null";
-	}
+Tester f(){
+	Tester t(3);
+	return t;
+}
+
+int main(){
+	auto t = f();
 }
