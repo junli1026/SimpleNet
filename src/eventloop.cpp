@@ -5,8 +5,8 @@
 
 namespace simple{
 
-void EventLoop::registerCmdhandler(std::function<){
-
+void EventLoop::registerCmdhandler(std::function<void(std::string)> h){
+	this->cmdhandler_ = h;
 }
 
 void EventLoop::handleCommand(){
@@ -44,12 +44,8 @@ void EventLoop::loop(){
 		if(acceptCmd_){
 			assert(this->cmdhandler_ != nullptr);
 		}
-		while(this->poller_->hasEvent()){
-
-
-		}
-
+		handleSocket();
 	}
-
 }
+
 }

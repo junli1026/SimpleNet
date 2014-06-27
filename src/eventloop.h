@@ -3,33 +3,39 @@
 
 #include <functional>
 #include <memory>
-namespace simple{
-class EventLoop{
+#include "poller.h"
 
+namespace simple{
+
+class EventLoop{
 private:
 	bool acceptCmd_; //whether accept internal command from channel
 	//bool acceptSock_; //whether accept coming connetcion
-	
-	std::function<void(std::string)> cmdhandler_;
-	
+	Poller poller_;
+	Acceptor acceptor_;
+	Connector connector_;
 	std::shared_ptr<Channel> channelptr_;
-	std::shared_ptr<Connector> connectorptr_;
-	std::shared_ptr<Acceptor> acceptorptr_;
-	std::shared_ptr<IOHandler> iohandlerptr_;
+
 	bool hasPipeEvent();
 	bool hasSocketEvent();
 	void handleCommand();
-	
-	std::function<(Connection&)> acceptcb_;
+	void handleSocket();
+
+	std::function<void(std::shared_ptr<Connection>)> acceptcb_;
+	std::function<void(std::shared_ptr<Connection>)> connectcb_;
 	std::function<void(Connection&)> readcb_;
 	std::function<void(Connection&)> writecb_;
-	std::function<void(Connection&)> connectcb_;
+	std::function<void(std::string)> cmdhandler_;
+
+	EventLoop& onCommand(std::function<void(std::string)>);
+	EventLoop& onAccept(std::function<void(std::shared_ptr<Connection>)>);
+	EventLoop& onRead();
+
 	EventLoop& operator=(const EventLoop& el){}
-	EventLool(const EventLoop& el){}
+	EventLoop(const EventLoop& el){}
+
 public:
 	EventLoop(Poller& p, Connector& c, Acceptor& a, IOHandler& h);
-
-	
 	void loop();
 };
 
