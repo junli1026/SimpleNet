@@ -103,8 +103,8 @@ bool Channel::hasMessage(){
 	}
 }
 
-std::string Channel::getMessage(){
-	if(hasMessage() || this->q_.size() > 0){
+std::string Channel::nextMessage(){
+	if(hasMessage()){
 		auto ret = this->q_.front();
 		q_.pop();
 		return ret;

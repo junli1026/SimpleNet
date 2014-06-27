@@ -26,7 +26,7 @@ public:
 	~Channel();
 	bool hasMessage();
 	void writeMessage(const std::string& str);
-	std::string getMessage();
+	std::string nextMessage();
 
 };
 
