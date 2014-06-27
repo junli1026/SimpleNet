@@ -10,8 +10,7 @@ private:
 	bool acceptCmd_; //whether accept internal command from channel
 	//bool acceptSock_; //whether accept coming connetcion
 	
-	std::function<void(std::string)> cmdhandler_; // 
-	
+	std::function<void(std::string)> cmdhandler_;
 	
 	std::shared_ptr<Channel> channelptr_;
 	std::shared_ptr<Connector> connectorptr_;
@@ -19,6 +18,7 @@ private:
 	std::shared_ptr<IOHandler> iohandlerptr_;
 	bool hasPipeEvent();
 	bool hasSocketEvent();
+	void handleCommand();
 	
 	std::function<(Connection&)> acceptcb_;
 	std::function<void(Connection&)> readcb_;
@@ -30,12 +30,7 @@ public:
 	EventLoop(Poller& p, Connector& c, Acceptor& a, IOHandler& h);
 
 	
-	void loop(){
-		while(true){
-				
-			
-		}
-	}
+	void loop();
 };
 
 }
