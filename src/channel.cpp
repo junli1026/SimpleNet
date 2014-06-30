@@ -135,7 +135,7 @@ Event<std::shared_ptr<Block>> Channel::nextEvent(){
 		qbody_.pop();
 		return Event<std::shared_ptr<Block>>(h, b);
 	}else{
-		return Event<std::shared_ptr<Block>>(GL_EventNone, nullptr);
+		return Event<std::shared_ptr<Block>>(EventNone, nullptr);
 	}
 }
 
