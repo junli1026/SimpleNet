@@ -20,6 +20,16 @@ public:
 		this->data_ = d;
 		this->type_ = t;
 	}
+
+	Event(const Event& rhs){
+		this->data_ = rhs.data();
+		this->type_ = rhs.type();
+	}
+	
+	Event& operator=(const Event& rhs){
+		this->data_ = rhs.data();
+		this->type_ = rhs.type();
+	}
 	
 	std::string type(){
 		return this->type_;
