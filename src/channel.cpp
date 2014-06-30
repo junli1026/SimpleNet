@@ -13,12 +13,12 @@
 namespace simple{
 
 inline int set_fd_nonblocking(int fd){
-    int flag = fcntl(fd, F_GETFL, 0);
-    if (-1 == flag) {
-        return -1;
-    }
-    fcntl(fd, F_SETFL, flag | O_NONBLOCK);
-    return 0;
+	int flag = fcntl(fd, F_GETFL, 0);
+	if (-1 == flag) {
+		return -1;
+	}
+	fcntl(fd, F_SETFL, flag | O_NONBLOCK);
+	return 0;
 }
 
 inline int watch_read(int epfd, int fd){
@@ -53,16 +53,16 @@ Channel::Channel(){
 
 	this->rfd_ = fd[0];
 	this->wfd_ = fd[1];
-    if(set_fd_nonblocking(this->rfd_) || set_fd_nonblocking(this->wfd_)){
-    	return;
-    }
-    this->epfd_ = epoll_create(1024);
-    if(this->epfd_ < 0){
-    	goto _fail;
-    }
-    if(watch_read(this->epfd_, this->rfd_)) {// || watch_write(this->epfd_, this->wfd_)){
-    	goto _fail;
-    }
+	if(set_fd_nonblocking(this->rfd_) || set_fd_nonblocking(this->wfd_)){
+		return;
+	}
+	this->epfd_ = epoll_create(1024);
+	if(this->epfd_ < 0){
+		goto _fail;
+	}
+	if(watch_read(this->epfd_, this->rfd_)) {// || watch_write(this->epfd_, this->wfd_)){
+		goto _fail;
+	}
 	return;
 
 _fail:
@@ -158,6 +158,8 @@ Event<std::shared_ptr<Block>> Channel::nextEvent(std::string& cmd){
 			return Event<std::shared_ptr<Block>>(EventConnect, b);
 		else if(h == this->cmdListen)
 			return Event<std::shared_ptr<Block>>(EventListen, b);
+		else
+			return Event<std::shared_ptr<Blocl>>(EventUndefined, b);
 	}
 	return Event<std::shared_ptr<Block>>(EventNone, nullptr);
 }
