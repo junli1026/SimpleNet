@@ -7,9 +7,11 @@
 #include <stdint.h>
 #include "buffer.h"
 #include "block.h"
+#include "event.h"
 
 namespace simple{
 
+/*
 class Message{
 public:
 	std::string header;
@@ -19,6 +21,7 @@ public:
 		this->body = b;
 	}
 };
+*/
 
 class Channel{
 private:
@@ -36,11 +39,11 @@ private:
 public:
 	Channel();
 	~Channel();
-	bool hasMessage();
-	void writeMessage(const std::string& str); //write a command without data
-	void writeMessage(const std::string& str, const void* data, size_t sz);
-	void writeMessage(const std::string& str, std::shared_ptr<Block> data);
-	std::shared_ptr<Message> nextMessage();
+	bool hasEvent();
+	void addEvent(const std::string& str); //write a command without data
+	void addEvent(const std::string& str, const void* data, size_t sz);
+	void addEvent(const std::string& str, std::shared_ptr<Block> data);
+	Event<std::shared_ptr<Block>> nextEvent();
 };
 
 }

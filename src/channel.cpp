@@ -91,7 +91,7 @@ bool Channel::hasData(){
 	return false;	
 }
 
-bool Channel::hasMessage(){
+bool Channel::hasEvent(){
 	while(hasData()){
 	}
 	auto b = this->buf_.retrieveBy("\r\n", 2);
@@ -103,18 +103,6 @@ bool Channel::hasMessage(){
 	}
 }
 
-std::shared_ptr<Message> Channel::nextMessage(){
-	if(hasMessage()){
-		std::string h = this->qheader_.front();
-		qheader_.pop();
-		std::shared_ptr<Block> b = this->qbody_.front();
-		qbody_.pop();
-		return std::make_shared<Message>(h, b);
-	}else{
-		return nullptr;
-	}
-}
-
 void Channel::writeHeader(const std::string& header){
 	Block b(header);
 	int n = write(this->wfd_, b.begin(), b.size());
@@ -123,20 +111,32 @@ void Channel::writeHeader(const std::string& header){
 	assert(n == 2);
 }
 
-void Channel::writeMessage(const std::string& h){
+void Channel::addEvent(const std::string& h){
 	this->qbody_.push(nullptr);
 	this->writeHeader(h);
 }
 
-void Channel::writeMessage(const std::string& h, const void* data, size_t sz){
+void Channel::addEvent(const std::string& h, const void* data, size_t sz){
 	std::shared_ptr<Block> b = std::make_shared<Block>(data, sz);
 	this->qbody_.push(b);
 	this->writeHeader(h);
 }
 
-void Channel::writeMessage(const std::string& h, std::shared_ptr<Block> b){
+void Channel::addEvent(const std::string& h, std::shared_ptr<Block> b){
 	this->qbody_.push(b);
-	this->writeMessage(h);
+	this->writeHeader(h);
+}
+
+Event<std::shared_ptr<Block>> Channel::nextEvent(){
+	if(hasEvent()){
+		std::string h = this->qheader_.front();
+		qheader_.pop();
+		std::shared_ptr<Block> b = this->qbody_.front();
+		qbody_.pop();
+		return Event<std::shared_ptr<Block>>(h, b);
+	}else{
+		return Event<std::shared_ptr<Block>>(GL_EventNone, nullptr);
+	}
 }
 
 }//namespace simple
