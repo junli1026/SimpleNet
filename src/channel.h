@@ -43,7 +43,7 @@ public:
 	void addExitEvent();
 	
 	bool hasEvent();
-	Event<std::shared_ptr<Block>> nextEvent();
+	Event<std::shared_ptr<Block>> nextEvent(std::string& cmd);
 };
 
 }
