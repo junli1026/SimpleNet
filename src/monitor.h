@@ -12,13 +12,13 @@ namespace simple{
 class Monitor{
 private:
 	std::set<int> acceptFds_;
-	std::shared_ptr<Poller> poller_;
+	Poller poller_;
 	bool isAcceptFd(int fd);
 	Monitor& operator=(const Monitor& m){}
 	Monitor(const Monitor& m){}
 	
 public:
-	Monitor(std::shared_ptr<Poller> p);
+	Monitor();
 	~Monitor();
 	void monitorAccept(int fd);
 	void monitorRead(std::shared_ptr<Connection> cptr);
