@@ -16,10 +16,7 @@ private:
 	int rfd_;
 	int wfd_;
 	int epfd_;
-	std::string cmdPublish("Publish");
-	std::string cmdListen("Listen");
-	std::string cmdConnect("Connect");
-	std::string cmdExit("Exit");
+
 	Buffer buf_;
 	std::queue<std::string> qheader_;
 	std::queue<std::shared_ptr<Block>> qbody_;
@@ -33,6 +30,11 @@ private:
 	void addEvent(const std::string& str, std::shared_ptr<Block> data);
 	
 public:
+	const std::string cmdPublish("Publish");
+	const std::string cmdListen("Listen");
+	const std::string cmdConnect("Connect");
+	const std::string cmdExit("Exit");
+	
 	Channel();
 	~Channel();
 	void addPublishEvent(std::shared_ptr<Block> data);
