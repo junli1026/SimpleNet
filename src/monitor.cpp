@@ -78,15 +78,15 @@ Event<int> Monitor::nextEvent(){
 		assert(ev);
 		int fd = ev->data.fd;
 		if(this->isAcceptFd(fd)){
-			return Event<int>(GL_EventAccept, fd);
+			return Event<int>(EventAccept, fd);
 		}else if(ev->events & EPOLLIN){
-			return Event<int>(GL_EventRead, fd);
+			return Event<int>(EventRead, fd);
 		}else{
 			assert(ev->events & EPOLLOUT);
-			return Event<int>(GL_EventRead, fd);
+			return Event<int>(EventWrite, fd);
 		}
 	}else{
-		return Event<int>(GL_EventNone, -1);
+		return Event<int>(EventNone, -1);
 	}
 }
 
