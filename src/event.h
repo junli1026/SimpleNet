@@ -5,7 +5,7 @@
 namespace simple{
 
 const std::string GL_EventNone = std::string();
-const std::string GL_EvnetRead = std::string("read"); 
+const std::string GL_EventRead = std::string("read"); 
 const std::string GL_EventWrite = std::string("write");
 const std::string GL_EventAccept = std::string("accept");
 const std::string GL_EventExit = std::string("exit");
