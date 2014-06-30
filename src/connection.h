@@ -2,12 +2,17 @@
 #define _CONNECTION_H_
 
 #include <memory>
+#include <map>
 #include "buffer.h"
 
 namespace simple{
 
+typedef std::map<int, std::shared_ptr<Connection>> ConnectionMap;
+
 enum ConnectionStatus{
 	ConnAlive,
+	ConnRead,
+	ConnWrite,
 	ConnClosing,
 	ConnClosed,
 	ConnError
