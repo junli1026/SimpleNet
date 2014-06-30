@@ -11,18 +11,6 @@
 
 namespace simple{
 
-/*
-class Message{
-public:
-	std::string header;
-	std::shared_ptr<Block> body;
-	Message(std::string h, std::shared_ptr<Block> b){
-		this->header = h;
-		this->body = b;
-	}
-};
-*/
-
 class Channel{
 private:
 	int rfd_;
@@ -36,13 +24,20 @@ private:
 	Channel(const Channel& ch){}
 	bool hasData();
 	void writeHeader(const std::string& header);
+	
 public:
 	Channel();
 	~Channel();
-	bool hasEvent();
+	void addPublishEvent(std::shared_ptr<Block> data);
+	void addListenEvent(std::shared_ptr<Block> data);
+	void addConnectEvent(std::shared_ptr<Block> data);
+	void addExitEvent();
+	
 	void addEvent(const std::string& str); //write a command without data
 	void addEvent(const std::string& str, const void* data, size_t sz);
 	void addEvent(const std::string& str, std::shared_ptr<Block> data);
+	
+	bool hasEvent();
 	Event<std::shared_ptr<Block>> nextEvent();
 };
 
