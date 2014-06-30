@@ -4,19 +4,22 @@
 
 namespace simple{
 
-const std::string GL_EventNone = std::string();
-const std::string GL_EventRead = std::string("read"); 
-const std::string GL_EventWrite = std::string("write");
-const std::string GL_EventAccept = std::string("accept");
-const std::string GL_EventExit = std::string("exit");
+const int EventNone	= 0;
+const int EventAccept	= 1;
+const int EventConnect	= 2;
+const int EventRead	= 3;
+const int EventWrite	= 4
+const int EventExit	= 5;
+const int EventPublish	= 6;
+
 
 template<typename T>
 class Event{
 private:
 	T data_;
-	std::string type_;
+	int type_;
 public:
-	Event(std::string t, T d){
+	Event(int t, T d){
 		this->data_ = d;
 		this->type_ = t;
 	}
@@ -31,7 +34,7 @@ public:
 		this->type_ = rhs.type();
 	}
 	
-	std::string type(){
+	int type(){
 		return this->type_;
 	}
 
