@@ -96,29 +96,47 @@ bool Channel::hasMessage(){
 	}
 	auto b = this->buf_.retrieveBy("\r\n", 2);
 	if(b != nullptr){
-		this->q_.push(b->dump2String());
+		this->qheader_.push(b->dump2String());
 		return true;
 	}else{
-		return q_.size() > 0;
+		return qheader_.size() > 0;
 	}
 }
 
-std::string Channel::nextMessage(){
+std::shared_ptr<Message> Channel::nextMessage(){
 	if(hasMessage()){
-		auto ret = this->q_.front();
-		q_.pop();
-		return ret;
+		std::string h = this->qheader_.front();
+		qheader_.pop();
+		std::shared_ptr<Block> b = this->qbody_.front();
+		qbody_.pop();
+		return std::make_shared<Message>(h, b);
 	}else{
 		return nullptr;
 	}
 }
 
-void Channel::writeMessage(const std::string& str){
-	Block b(str);
+void Channel::writeHeader(const std::string& header){
+	Block b(header);
 	int n = write(this->wfd_, b.begin(), b.size());
 	assert(n == b.size());
 	n = write(this->wfd_, "\r\n", 2);
 	assert(n == 2);
+}
+
+void Channel::writeMessage(const std::string& h){
+	this->qbody_.push(nullptr);
+	this->writeHeader(h);
+}
+
+void Channel::writeMessage(const std::string& h, const void* data, size_t sz){
+	std::shared_ptr<Block> b = std::make_shared<Block>(data, sz);
+	this->qbody_.push(b);
+	this->writeHeader(h);
+}
+
+void Channel::writeMessage(const std::string& h, std::shared_ptr<Block> b){
+	this->qbody_.push(b);
+	this->writeMessage(h);
 }
 
 }//namespace simple
