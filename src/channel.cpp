@@ -127,16 +127,39 @@ void Channel::addEvent(const std::string& h, std::shared_ptr<Block> b){
 	this->writeHeader(h);
 }
 
-Event<std::shared_ptr<Block>> Channel::nextEvent(){
+void Channel::addPublishEvent(std::shared_ptr<Block> b){
+	this->addEvent(this->cmdPublish, b);	
+}
+
+void Channel::addListenEvent(std::shared_ptr<Block> b){
+	this->addEvent(this->cmdListem, b);
+}
+
+void Channel::addConnectEvent(std::shared_ptr<Block> b){
+	this->addEvent(this->cmdConnect, b);
+}
+
+void Channel::addExitEvent(std::shared_ptr<Block> b){
+	this->addEvent(this->cmdExit);
+}
+
+Event<std::shared_ptr<Block>> Channel::nextEvent(std::string& cmd){
 	if(hasEvent()){
 		std::string h = this->qheader_.front();
 		qheader_.pop();
 		std::shared_ptr<Block> b = this->qbody_.front();
 		qbody_.pop();
-		return Event<std::shared_ptr<Block>>(h, b);
-	}else{
-		return Event<std::shared_ptr<Block>>(EventNone, nullptr);
+		cmd = h;
+		if(h == this->cmdPublish)
+			return Event<std::shared_ptr<Block>>(EventPublish, b);
+		else if(h == this->cmdExit)
+			return Event<std::shared_ptr<Block>>(EventExit, b);
+		else if(h == this->cmdConnect)
+			return Event<std::shared_ptr<Block>>(EventConnect, b);
+		else if(h == this->cmdListen)
+			return Event<std::shared_ptr<Block>>(EventListen, b);
 	}
+	return Event<std::shared_ptr<Block>>(EventNone, nullptr);
 }
 
 }//namespace simple
