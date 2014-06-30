@@ -16,6 +16,10 @@ private:
 	int rfd_;
 	int wfd_;
 	int epfd_;
+	std::string cmdPublish("Publish");
+	std::string cmdListen("Listen");
+	std::string cmdConnect("Connect");
+	std::string cmdExit("Exit");
 	Buffer buf_;
 	std::queue<std::string> qheader_;
 	std::queue<std::shared_ptr<Block>> qbody_;
@@ -24,6 +28,9 @@ private:
 	Channel(const Channel& ch){}
 	bool hasData();
 	void writeHeader(const std::string& header);
+	void addEvent(const std::string& str); //write a command without data
+	void addEvent(const std::string& str, const void* data, size_t sz);
+	void addEvent(const std::string& str, std::shared_ptr<Block> data);
 	
 public:
 	Channel();
@@ -32,10 +39,6 @@ public:
 	void addListenEvent(std::shared_ptr<Block> data);
 	void addConnectEvent(std::shared_ptr<Block> data);
 	void addExitEvent();
-	
-	void addEvent(const std::string& str); //write a command without data
-	void addEvent(const std::string& str, const void* data, size_t sz);
-	void addEvent(const std::string& str, std::shared_ptr<Block> data);
 	
 	bool hasEvent();
 	Event<std::shared_ptr<Block>> nextEvent();
