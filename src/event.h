@@ -12,7 +12,6 @@ const int EventWrite	= 4
 const int EventExit	= 5;
 const int EventPublish	= 6;
 
-
 template<typename T>
 class Event{
 private:
