@@ -11,6 +11,7 @@ const int EventRead	= 3;
 const int EventWrite	= 4
 const int EventExit	= 5;
 const int EventPublish	= 6;
+const int EventUndefined= 7;
 
 template<typename T>
 class Event{
