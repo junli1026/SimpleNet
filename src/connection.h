@@ -7,8 +7,6 @@
 
 namespace simple{
 
-typedef std::map<int, std::shared_ptr<Connection>> ConnectionMap;
-
 enum ConnectionStatus{
 	ConnAlive,
 	ConnRead,
