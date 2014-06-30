@@ -4,8 +4,7 @@
 
 namespace simple{
 
-Monitor::Monitor(std::shared_ptr<Poller> p){
-	this->poller_ = p;
+Monitor::Monitor(){
 }
 
 Monitor::~Monitor(){
@@ -17,7 +16,7 @@ void Monitor::monitorAccept(int fd){
 		return;
 	}
 	this->acceptFds_.insert(fd);
-	this->poller_->addRead(fd);
+	this->poller_.addRead(fd);
 }
 
 void Monitor::monitorRead(std::shared_ptr<Connection> cptr){
@@ -26,10 +25,10 @@ void Monitor::monitorRead(std::shared_ptr<Connection> cptr){
 	}
 	auto st = cptr->status();
 	if(st == ConnAlive){ 
-		this->poller_->addRead(cptr->fd());
+		this->poller_.addRead(cptr->fd());
 		cptr->setStatus(ConnRead);
 	}else if(st == ConnWrite){
-		this->poller_->mod2Write(cptr->fd());
+		this->poller_.mod2Write(cptr->fd());
 		cptr->setStatus(ConnWrite);
 	}else{
 		assert(st == ConnRead);
@@ -42,9 +41,9 @@ void Monitor::monitorWrite(std::shared_ptr<Connection> cptr){
 	}
 	auto st = cptr->status();
 	if(st == ConnAlive){
-		this->poller_->addWrite(cptr->fd());
+		this->poller_.addWrite(cptr->fd());
 	}else if(st == ConnRead){
-		this->poller_->mod2Write(cptr->fd());
+		this->poller_.mod2Write(cptr->fd());
 	}else{
 		assert(st == ConnWrite);
 	}
@@ -56,15 +55,15 @@ void Monitor::stopMonitor(std::shared_ptr<Connection> cptr){
 	}
 	auto st = cptr->status();
 	assert(st == ConnRead || st == ConnWrite);
-	this->poller_->remove(cptr->fd());
+	this->poller_.remove(cptr->fd());
 }
 
 bool Monitor::hasEvent(){
-	if(this->poller_->hasEvent()){
+	if(this->poller_.hasEvent()){
 		return true;
 	}else{
-		this->poller_->poll(200);
-		return this->poller_->hasEvent();
+		this->poller_.poll(200);
+		return this->poller_.hasEvent();
 	}
 }
 
@@ -75,7 +74,7 @@ bool Monitor::isAcceptFd(int fd){
 
 Event<int> Monitor::nextEvent(){
 	if(this->hasEvent()){
-		struct epoll_event* ev = this->poller_->nextEvent();
+		struct epoll_event* ev = this->poller_.nextEvent();
 		assert(ev);
 		int fd = ev->data.fd;
 		if(this->isAcceptFd(fd)){
