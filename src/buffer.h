@@ -19,13 +19,13 @@ private:
 	int rIndex_;
 	int wIndex_;
 
+	uint8_t* begin();
 	void expand(size_t);
 	void tryClearDummy();
 	void moveReadIndex(size_t sz);
-
+	
 	Buffer& operator=(const Buffer& rhs){}
 	Buffer(const Buffer&){}
-
 public:
 	Buffer();
 	~Buffer();

@@ -43,6 +43,11 @@ void Buffer::moveReadIndex(size_t sz){
 	this->tryClearDummy();
 }
 
+uint8_t* Buffer::begin(){
+	auto first = this->b_.begin() + this->rIndex_;
+	return &(*first);
+}
+
 //try to clear unused/dummy data before rIndex_
 void Buffer::tryClearDummy(){
 	if(this->rIndex_  < MaxDummySize){ //not need to move
@@ -99,9 +104,8 @@ std::shared_ptr<Block> Buffer::retrieve(size_t sz){
 		return nullptr;
 	}
 
-	auto first = this->b_.begin() + this->rIndex_;
 	size_t rsz = this->size() > sz ? sz : this->size();
-	auto ret = std::make_shared<Block>(first, first + rsz);
+	auto ret = std::make_shared<Block>(this->begin(), rsz);
 	this->moveReadIndex(rsz);
 	return ret;
 }
@@ -125,7 +129,7 @@ std::shared_ptr<Block> Buffer::retrieveBy(const void* separator, size_t sz){
 	
 	size_t dsz = it - first; //data size
 	size_t rsz = it - first + sz; // readable size
-	auto ret = std::make_shared<Block>(first, dsz);
+	auto ret = std::make_shared<Block>(this->begin(), dsz);
 	this->moveReadIndex(rsz);
 	return ret;
 } 
@@ -134,7 +138,7 @@ int Buffer::retrieveInt(){
 	if(this->size() < sizeof(int)){
 		return -1;
 	}else{
-		int ret = *(int*)(&this->b_[this->rIndex_]);
+		int ret = *(int*)this->begin();
 		this->moveReadIndex(sizeof(int));
 		return ret;
 	}
