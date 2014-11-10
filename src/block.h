@@ -18,8 +18,8 @@ private:
 
 public:
 	Block(const Block& b);
-	Block(const char* str);
-	Block(const std::string& str);
+	//Block(const char* str);
+	//Block(const std::string& str);
 	Block(const std::shared_ptr<Block>& b);
 	Block(const void* src, size_t sz);
 	~Block();
