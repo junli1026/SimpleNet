@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <vector>
+#include <string>
 #include <iostream>
 #include <stdint.h>
 #include "buffer.h"
@@ -9,7 +10,7 @@ namespace simple{
 Buffer::Buffer(){
 	this->rIndex_ = 0;
 	this->wIndex_ = 0;
-	this->b_.resize(DefaultBufferSize);
+	this->b_.resize(InitBufferSize);
 }
 
 Buffer::~Buffer(){
@@ -18,26 +19,50 @@ Buffer::~Buffer(){
 void Buffer::expand(size_t try_append_size){
 	while(this->b_.size() < this->wIndex_ + try_append_size){
 		if(this->b_.size() == 0){
-			this->b_.resize(DefaultBufferSize);
+			this->b_.resize(InitBufferSize);
 		}else{
 			this->b_.resize(this->b_.size() * 2);
 		}
 	}
 }
 
-void Buffer::removeEmptyHead(){
+size_t Buffer::size() const{
+	return this->wIndex_ - this->rIndex_;
+}
+
+bool Buffer::empty(){
+	return this->size() == 0;
+}
+
+void Buffer::moveReadIndex(size_t sz){
+	if(sz >= this->size()){
+		this->clear();
+	}else{
+		this->rIndex_ += sz;
+	}
+	this->tryClearDummy();
+}
+
+//try to clear unused/dummy data before rIndex_
+void Buffer::tryClearDummy(){
+	if(this->rIndex_  < MaxDummySize){ //not need to move
+		return;
+	}
+
 	if(this->rIndex_ == 0){
 		return;
 	}
-	if(this->rIndex_ == this->wIndex_){
+
+	if(this->empty()){
 		this->rIndex_ = 0;
 		this->wIndex_ = 0;
 		return;
 	}
+	int sz = this->size();
 	std::vector<uint8_t> tmp(this->b_.begin() + this->rIndex_, this->b_.begin() + this->wIndex_);
 	std::copy(tmp.begin(), tmp.end(), this->b_.begin());
 	this->rIndex_ = 0;
-	this->wIndex_ = tmp.end() - tmp.begin();
+	this->wIndex_ = sz;
 }
 
 void Buffer::append(const void* src, size_t len){
@@ -65,24 +90,20 @@ void Buffer::clear(){
 	this->b_.clear();
 }
 
-const uint8_t* Buffer::begin() const{
-	if(this->size() > 0){
-		return &this->b_[this->rIndex_];
-	}else{
-		return NULL;
+std::shared_ptr<Block> Buffer::retrieve(size_t sz){
+	if(sz == 0){
+		return nullptr;
 	}
-}
 
-void Buffer::truncate(size_t sz){
-	if(sz >= this->size()){
-		this->clear();
-	}else{
-		this->rIndex_ += sz;
+	if(this->empty()){
+		return nullptr;
 	}
-}
 
-size_t Buffer::size() const{
-	return this->wIndex_ - this->rIndex_;
+	auto first = this->b_.begin() + this->rIndex_;
+	size_t rsz = this->size() > sz ? sz : this->size();
+	auto ret = std::make_shared<Block>(first, first + rsz);
+	this->moveReadIndex(rsz);
+	return ret;
 }
 
 std::shared_ptr<Block> Buffer::retrieveBy(const void* separator, size_t sz){
@@ -90,41 +111,52 @@ std::shared_ptr<Block> Buffer::retrieveBy(const void* separator, size_t sz){
 		return nullptr;
 	}
 	
-	auto first = this->b_.begin() + this->rIndex_;
-	auto last = this->b_.begin() + this->wIndex_;
-	if(first == last){
+	if(this->empty()){
 		return nullptr;
 	}
 
+	auto first = this->b_.begin() + this->rIndex_;
+	auto last = this->b_.begin() + this->wIndex_;
 	const uint8_t* s = static_cast<const uint8_t*>(separator);
 	auto it = std::search(first, last, s, s+sz); 
-	if(it == last){
+	if(it == last){ //seperator not found
 		return nullptr;
 	}
 	
-	size_t bsz = it - first;
-	if(bsz == 0){
-		this->rIndex_ += sz;
-		return nullptr;
-	}
-	
-	auto ret = std::make_shared<Block>(&this->b_[this->rIndex_], bsz);
-	this->rIndex_ += it - first + sz;
-	
-	if(this->rIndex_  > MaxEmptyHead){
-		removeEmptyHead();
-	}
+	size_t dsz = it - first; //data size
+	size_t rsz = it - first + sz; // readable size
+	auto ret = std::make_shared<Block>(first, dsz);
+	this->moveReadIndex(rsz);
 	return ret;
 } 
 
 int Buffer::retrieveInt(){
 	if(this->size() < sizeof(int)){
-		return 0;
+		return -1;
 	}else{
-		int ret = *(int*)this->begin();
-		this->truncate(sizeof(int));
+		int ret = *(int*)(&this->b_[this->rIndex_]);
+		this->moveReadIndex(sizeof(int));
 		return ret;
 	}
+}
+
+std::string Buffer::retrieveString(){
+	if(this->empty()){
+		return std::string();
+	}
+
+	auto first = this->b_.begin() + this->rIndex_;
+	auto last = this->b_.begin() + this->wIndex_;
+	char s = '\0';
+	auto it = std::find(first, last, (uint8_t)s);
+	if(it == last){ //'\0' not found
+		return std::string();
+	}
+	
+	size_t rsz = it - first + sizeof(char); // readable size
+	std::string ret(first, it);
+	this->moveReadIndex(rsz);
+	return ret;
 }
 
 }
