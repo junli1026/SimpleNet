@@ -6,11 +6,22 @@
 #include <string>
 #include <stdint.h>
 #include "buffer.h"
-#include "block.h"
-#include "event.h"
 
 namespace simple{
 
+class Channel{
+private:
+	Channel& operator=(const Channel& rhs){}
+	Channel(Channel& ch){}
+	Channel(){}
+
+	std::shared_ptr<Buffer> rb_;
+	std::shared_ptr<Buffer> wb_;
+public:
+	Channel(bool readable, bool writable);
+
+};
+/*
 class Channel{
 private:
 	int rfd_;
@@ -45,6 +56,7 @@ public:
 	bool hasEvent();
 	Event<std::shared_ptr<Block>> nextEvent(std::string& cmd);
 };
+*/
 
 }
 #endif
